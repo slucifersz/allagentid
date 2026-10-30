@@ -5,18 +5,21 @@
 //   merchant    — HashKey Merchant gateway: seller's Cart Mandate is an HSP order; the payer signs
 //                 an x402 / EIP-3009 Payment Mandate by API if enabled, otherwise the owner pays
 //                 at the hosted checkout
+//   agentic     — HSP Agentic Payment (hackathon QA MCP server): seller's order via create_order,
+//                 payer signs the EIP-712 data from prepare_payment, HSP's Gateway broadcasts
 import crypto from "node:crypto";
 import { decodeEventLog, keccak256, parseAbi, recoverMessageAddress, toHex, type Address, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import type { SellerSpec } from "./agents/catalog.js";
 import { paymentNet, signTransferAuthorization, stable, toUnits } from "./chain.js";
+import { AGENTIC_DONE, type AgenticToken, type Eip712Payload, type HspAgentic } from "./hsp/agentic.js";
 import type { Coordinator, HspChainInfo } from "./hsp/coordinator.js";
 import { flowIdFromUrl, MERCHANT_SETTLED, type CartContents, type CartMandate, type MerchantClient, type MerchantPayment, type PaymentMandate } from "./hsp/merchant.js";
 import { signMerchantAuthorization, verifyMerchantAuthorization } from "./hsp/merchant-crypto.js";
 import { buildMandate, decodeAddress, mandateHash, MANDATE_TYPES, type HspDomain, type SignedMandate } from "./hsp/wire.js";
 
 export interface Quote {
-  rail: "hsp-coordinator" | "hsp-merchant";
+  rail: "hsp-coordinator" | "hsp-merchant" | "hsp-agentic";
   quoteId: string;
   seller: string;
   recipient: Address;
@@ -36,7 +39,7 @@ export type PayOutcome =
 export type Report = (kind: "sign" | "hsp" | "chain", title: string, detail?: string, txHash?: string) => void;
 
 export interface Rail {
-  name: "hsp-coordinator" | "hsp-merchant";
+  name: Quote["rail"];
   label: string;
   token: Address;
   chainId: number;
@@ -268,6 +271,163 @@ export class MerchantRail implements Rail {
     if (p.to_pay_address?.toLowerCase() !== q.recipient.toLowerCase()) throw new Error("payment went to another wallet");
     if (p.tx_signature && !(await transferSeen(p.tx_signature as Hex, q.token, q.recipient, BigInt(q.amount)))) throw new Error("settlement transfer not found on-chain");
     return { payer: p.payer_address as Address, txHash: p.tx_signature as Hex | undefined };
+  }
+
+  ledgerId(proofId: string) {
+    return keccak256(toHex(proofId));
+  }
+  proofUrl() {
+    return undefined;
+  }
+}
+
+// ---------------------------------------------------------------- HSP Agentic Payment (MCP)
+
+/** viem wants bigint uints and no EIP712Domain entry; HSP returns JSON strings. */
+function typedDataForViem(e: Eip712Payload) {
+  const { EIP712Domain: _drop, ...types } = e.types;
+  const toNative = (fields: { name: string; type: string }[], obj: Record<string, unknown>): Record<string, unknown> =>
+    Object.fromEntries(
+      Object.entries(obj).map(([k, v]) => {
+        const f = fields.find((x) => x.name === k);
+        if (f && /^u?int\d*$/.test(f.type)) return [k, BigInt(v as string)];
+        if (f && types[f.type] && v && typeof v === "object") return [k, toNative(types[f.type], v as Record<string, unknown>)];
+        return [k, v];
+      }),
+    );
+  const domain = { ...e.domain, ...(e.domain.chainId !== undefined ? { chainId: Number(e.domain.chainId) } : {}) };
+  return { domain, types, primaryType: e.primaryType, message: toNative(types[e.primaryType] ?? [], e.message) };
+}
+
+export class AgenticRail implements Rail {
+  name = "hsp-agentic" as const;
+  token: Address;
+  chainId: number;
+  constructor(
+    private hsp: HspAgentic,
+    private cfg: AgenticToken,
+    private merchantName: string,
+    public label: string,
+    private pollMs: number,
+  ) {
+    this.token = cfg.address as Address;
+    this.chainId = cfg.chainId;
+  }
+
+  async createQuote(s: SellerSpec, sellerKey: Hex): Promise<Quote> {
+    const seller = privateKeyToAccount(sellerKey);
+    const q = baseQuote(this.name, s, seller.address, this.token, 2 * 3600);
+    const id = `${s.handle}-${Date.now().toString(36)}-${crypto.randomBytes(3).toString("hex")}`;
+    const contents = {
+      id: `CART-${id}`,
+      user_cart_confirmation_required: false,
+      cart_expiry: new Date(q.expiresAt * 1000).toISOString(),
+      merchant_name: this.merchantName,
+      payment_request: {
+        method_data: [
+          {
+            supported_methods: "https://www.x402.org/",
+            data: { x402Version: 2, network: this.cfg.network, chain_id: this.chainId, contract_address: this.token, pay_to: seller.address, coin: this.cfg.symbol },
+          },
+        ],
+        details: {
+          id: `PAY-${id}`,
+          display_items: [{ label: `${s.skill.name} · @${s.handle}`, amount: { currency: "USD", value: q.amountUsd } }],
+          total: { label: "Total", amount: { currency: "USD", value: q.amountUsd } },
+        },
+      },
+    };
+    const order = await this.hsp.createOrder(this.merchantName, seller.address, { contents });
+    const body = { ...q, quoteId: order.payment_request_id };
+    const payload = { flow_id: order.flow_id, payment_request_id: order.payment_request_id, payment_url: order.payment_url };
+    // the seller's passport wallet signs quote + HSP order ids, so the buyer knows the order is the seller's
+    return { ...body, payload: { ...payload, signature: await seller.signMessage({ message: quoteMessage({ ...body, ...payload } as never) }) } };
+  }
+
+  async verifyQuote(q: Quote, sellerWallet: Address) {
+    const { payload, ...body } = q;
+    const { signature, ...ids } = payload as { signature: Hex; flow_id: string };
+    const signer = await recoverMessageAddress({ message: quoteMessage({ ...body, ...ids } as never), signature });
+    if (signer.toLowerCase() !== sellerWallet.toLowerCase()) return "quote was not signed by the seller's passport wallet";
+    if (q.recipient.toLowerCase() !== sellerWallet.toLowerCase()) return "quote asks to pay a wallet that isn't the seller's passport";
+    if (q.chainId !== this.chainId || q.token.toLowerCase() !== this.token.toLowerCase()) return "quote is not payable in the HSP token on this chain";
+    if (q.expiresAt < Date.now() / 1000) return "quote expired";
+    return null;
+  }
+
+  async pay(q: Quote, agentKey: Hex, report: Report): Promise<PayOutcome> {
+    const account = privateKeyToAccount(agentKey);
+    const { flow_id, payment_request_id } = q.payload as { flow_id: string; payment_request_id: string };
+    for (let attempt = 1; ; attempt++) {
+      const p = await this.hsp.prepare(flow_id, account.address, this.cfg.protocol);
+      const raw = BigInt(p.token_total_raw);
+      const m = p.eip712.message as Record<string, string>;
+      // check what we're about to sign before signing it
+      if (p.pay_to && p.pay_to.toLowerCase() !== q.recipient.toLowerCase()) throw new Error("HSP quote pays a different recipient");
+      if (m.to && m.to.toLowerCase() !== q.recipient.toLowerCase()) throw new Error("EIP-712 data pays a different recipient");
+      const vc = p.eip712.domain.verifyingContract as string | undefined;
+      if (this.cfg.protocol === "eip3009" && vc && vc.toLowerCase() !== this.token.toLowerCase()) throw new Error("EIP-712 data is for another token");
+      if (raw > (BigInt(q.amount) * 110n) / 100n) throw new Error(`HSP total ${raw} is over the quoted ${q.amount} (+10% fee cap)`);
+      const bal = toUnits(await stable.balance(this.token, account.address));
+      if (bal < raw) throw new Error(`wallet holds ${bal} raw units, needs ${raw}: the team must fund it with the HSP test token`);
+      report("hsp", `HSP quote locked`, `${raw} raw units of ${this.cfg.symbol} → ${q.recipient} · flow ${flow_id.slice(0, 8)}…`);
+
+      const signature = await account.signTypedData(typedDataForViem(p.eip712) as never);
+      report("sign", `Signed the HSP payment authorization`, `${p.eip712.primaryType} · ${q.amountUsd} USD from ${account.address}`);
+      const mandate = await this.hsp.finalize(signature, p);
+      try {
+        await this.hsp.submit(mandate);
+        break;
+      } catch (e) {
+        // 30043 / expired quote: prepare again and sign the new data; never resubmit the old signature
+        if (attempt < 3 && /30043|expired/i.test((e as Error).message)) {
+          report("hsp", `HSP quote expired, preparing a fresh one`);
+          continue;
+        }
+        throw e;
+      }
+    }
+    report("hsp", `HSP: payment-submitted`, `payment_request_id ${payment_request_id}`);
+    const pay = await this.waitDone({ flowId: flow_id, paymentRequestId: payment_request_id }, report);
+    report("chain", `Settled by HSP on ${paymentNet.config.label}`, undefined, pay.tx_signature);
+    return { kind: "settled", proofId: payment_request_id, payer: account.address, txHash: pay.tx_signature as Hex, hspUrl: q.payload.payment_url as string | undefined };
+  }
+
+  private async waitDone(ids: { flowId: string; paymentRequestId: string }, report: Report) {
+    const start = Date.now();
+    let last = "";
+    let warned = false;
+    for (;;) {
+      const { payment: p, attributionVerified } = await this.hsp.query(ids, this.merchantName).catch((e) => {
+        report("hsp", `HSP query failed, retrying`, (e as Error).message);
+        return { payment: undefined, attributionVerified: undefined };
+      });
+      if (p && p.status !== last) report("hsp", `HSP: ${(last = p.status)}`);
+      if (p?.status === "payment-failed") throw new Error(`HSP payment failed: ${p.status_reason ?? "no reason given"}`);
+      if (p && AGENTIC_DONE.includes(p.status) && p.tx_signature) {
+        if (attributionVerified === false) throw new Error(`HSP did not attribute the payment to ${this.merchantName}`);
+        return p;
+      }
+      if (!warned && Date.now() - start > 10 * 60_000) {
+        warned = true;
+        report("hsp", `Pending confirmation`, `flow_id ${ids.flowId} · payment_request_id ${ids.paymentRequestId}`);
+      }
+      if (Date.now() - start > 30 * 60_000) throw new Error(`still pending after 30 min (flow_id ${ids.flowId})`);
+      await sleep(this.pollMs);
+    }
+  }
+
+  awaitCheckout(): Promise<{ payer: Address; txHash: Hex }> {
+    throw new Error("the agentic rail has no hosted checkout");
+  }
+
+  async verifyPaid(q: Quote, proofId: string) {
+    const { payment: p, attributionVerified } = await this.hsp.query({ paymentRequestId: proofId, flowId: (q.payload as { flow_id: string }).flow_id }, this.merchantName);
+    if (!AGENTIC_DONE.includes(p.status)) throw new Error(`HSP says ${p.status}`);
+    if (attributionVerified === false) throw new Error(`payment not attributed to ${this.merchantName}`);
+    if (p.to_pay_address && p.to_pay_address.toLowerCase() !== q.recipient.toLowerCase()) throw new Error("payment went to another wallet");
+    if (!p.tx_signature || !(await transferSeen(p.tx_signature as Hex, q.token, q.recipient, BigInt(q.amount)))) throw new Error("settlement transfer not found on-chain");
+    return { payer: p.payer_address as Address, txHash: p.tx_signature as Hex };
   }
 
   ledgerId(proofId: string) {

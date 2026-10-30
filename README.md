@@ -57,7 +57,7 @@ Open http://localhost:4300 and click **Run the demo**:
 5. **Card (demo):** a one-time Visa card for a $4.50 merchant order, issued within the same limits. A $40 card is refused.
 6. *"One AllScale onboarding: identity, an account, payments and a card."*
 
-Local mode starts anvil, deploys the contracts, issues the passports and funds the agents. It runs an HSP emulator for whichever rail `HSP_MODE` selects. Try `HSP_MODE=merchant npm run dev` for the HashKey Merchant rail: add `HSP_PAY_MANDATE_URL=on` and the agent pays by API; without it, you pay at the local HSP checkout.
+Local mode starts anvil, deploys the contracts, issues the passports and funds the agents. It runs an HSP emulator for whichever rail `HSP_MODE` selects. Try `HSP_MODE=agentic npm run dev` for the HSP Agentic Payment flow against a local copy of HSP's MCP server, or `HSP_MODE=merchant npm run dev` for the HashKey Merchant rail: add `HSP_PAY_MANDATE_URL=on` and the agent pays by API; without it, you pay at the local HSP checkout.
 
 ### Connect it to Claude / Grok / Muse (MCP)
 
@@ -80,6 +80,7 @@ The Track 2 text points at two HSP surfaces, so the app supports both and switch
 
 | `HSP_MODE` | What pays | Needs |
 |---|---|---|
+| `agentic` | **HSP Agentic Payment** (the hackathon's HSP QA MCP server, `mcp-qa.hashkeymerchant.com`). The seller agent opens an HSP order with `create_order` (`pay_to` = its passport wallet, `merchant_name` = `AllScale`). The pay agent checks both passports and its rules, calls `prepare_payment`, checks the EIP-712 data and its balance, signs with its own wallet, then `finalize_payment` → `submit_payment`. HSP's Gateway broadcasts; the agent polls `query_payment` until `payment-safe` / `payment-finalized` with `attribution_verified`. | Our egress IP on HSP's QA allowlist; payer wallets funded with the token `get_chain_config` names |
 | `merchant` | **HashKey Merchant gateway** (https://hashkey-merchant.github.io). Each seller quote is a real HSP order: a Cart Mandate signed ES256K with the key in `keys/`, with `pay_to` set to the seller's passport wallet. The buyer verifies it. If `HSP_PAY_MANDATE_URL` is set, the agent signs an x402 / EIP-3009 Payment Mandate and submits it by API. Otherwise the owner pays at HSP's hosted checkout, and the job finishes once HSP reports the payment settled. | `HSP_APP_KEY`, `HSP_APP_SECRET` from the merchant console (QA host for testnet) |
 | `coordinator` | **HSP Settlement Protocol** on a hosted Coordinator: signed EIP-712 mandate → transfer from the agent's own wallet → observe → `SETTLED` | `HSP_COORDINATOR_URL`, `HSP_API_KEY` |
 | `builtin` | The same Settlement Protocol flow against the built-in Coordinator, observing **real** USDC transfers on HSK Chain | nothing; this is the fallback |
@@ -97,7 +98,16 @@ npm run deploy:test-usdc    # test USDC (EIP-3009) → HSK testnet, saves STABLE
 npm run live                # issues passports, tops up the paying agents with test USDC and gas, serves the dashboard + MCP
 ```
 
-**Once HSP answers:** set `HSP_APP_KEY` / `HSP_APP_SECRET` (merchant rail, plus `HSP_PAY_MANDATE_URL` once confirmed) or `HSP_COORDINATOR_URL` / `HSP_API_KEY` (coordinator rail) in `.env`. To pay in the official USDC instead of the test token, remove `STABLECOIN_ADDRESS` and `TEST_STABLECOIN` and fund `nova.agent` and `atlas.client` with gas + ~25 USDC. Then:
+**HSP Agentic Payment (HSP QA):** once HSP confirms the allowlist for the server's egress IP, run the one-shot check, then switch the rail:
+
+```bash
+npm run check:hsp-mcp       # health, the 8 tools and their live schemas, get_chain_config, agent balances; no orders, no retries
+# .env: HSP_MODE=agentic, PAYMENT_NETWORK=<network get_chain_config offers>, remove STABLECOIN_ADDRESS / TEST_STABLECOIN
+# the team funds nova.agent and atlas.client with that exact token (the guide forbids the agent from funding itself)
+npm run live
+```
+
+**Other HSP rails:** set `HSP_APP_KEY` / `HSP_APP_SECRET` (merchant rail, plus `HSP_PAY_MANDATE_URL` once confirmed) or `HSP_COORDINATOR_URL` / `HSP_API_KEY` (coordinator rail) in `.env`. To pay in the official USDC instead of the test token, remove `STABLECOIN_ADDRESS` and `TEST_STABLECOIN` and fund `nova.agent` and `atlas.client` with gas + ~25 USDC. Then:
 
 ```bash
 npm run check:hsp           # smoke-tests the configured rail against the real HSP endpoint
@@ -112,7 +122,7 @@ npm run live
 | A2A agent cards, signed quotes | ✅ | ✅ |
 | HSP mandate (EIP-712, wire v1) | ✅ real signature | ✅ same code, real Coordinator |
 | USDC settlement from the agent wallet | ✅ local token | ✅ HSK testnet: our test USDC (fallback) or official USDC |
-| HSP | emulators for all three rails (`HSP_MODE=builtin\|coordinator\|merchant`) | `builtin`: real HSK transfers · `coordinator`: hosted Coordinator · `merchant`: HashKey Merchant gateway |
+| HSP | emulators for every rail (`HSP_MODE=builtin\|coordinator\|merchant\|agentic`) | `agentic`: HSP QA MCP server · `builtin`: real HSK transfers · `coordinator`: hosted Coordinator · `merchant`: HashKey Merchant gateway |
 | AgentCard | simulation, labelled demo | simulation, labelled demo (coming soon via issuing partner) |
 
 The mandate encoding follows the HSP wire v1 field set used by the reference SDK, as other hackathon teams vendored it. `npm run check:hsp` confirms that the Coordinator's `paymentId` equals our local mandate hash.

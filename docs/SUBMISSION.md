@@ -49,11 +49,12 @@ A payment between agents works like this:
 4. If everything passes, it signs and settles through HSP. USDC moves on HSK Chain.
 5. The settlement is written to both passports. The receiver independently checks the payment with HSP and on-chain before it delivers.
 
-**Two HSP integrations, switched by config:**
+**HSP integrations, switched by config:**
+- **HSP Agentic Payment (HSP QA MCP).** The seller agent opens an HSP order (`create_order`, `pay_to` = its passport wallet, team `AllScale`). After the on-chain passport and rule checks, the pay agent runs `prepare_payment` → signs the EIP-712 authorization with its own wallet → `finalize_payment` → `submit_payment`, and polls `query_payment` to `payment-safe` / `payment-finalized` with team attribution verified. HSP's Gateway broadcasts the transfer; the receiver re-checks it with HSP and on-chain before it delivers.
 - **HashKey Merchant gateway.** Seller quotes are real HSP orders: ES256K-signed Cart Mandates with `pay_to` set to the seller's passport wallet. The agent submits the Payment Mandate by API where HSP allows it; otherwise the owner pays at HSP checkout.
 - **HSP Settlement Protocol.** The agent signs an EIP-712 mandate, settles the transfer from its own wallet, and the Coordinator verifies it.
 
-**What runs in this submission.** The hosted HSP sandbox from earlier editions is offline, and we are still waiting for HashKey Merchant credentials. So this submission runs the HSP Settlement Protocol flow (signed EIP-712 mandate → transfer from the agent's own wallet → observe → SETTLED) against our built-in Coordinator, with real transfers on **HSK Chain testnet** in a test USDC we deployed (`0x902186b2e62469265d47158ca4b8e7664488cc71`). The merchant rail is fully implemented and switches on with one config change once credentials arrive. We have asked the organizers about merchant onboarding, agent pay-by-API and the sandbox.
+**What runs in this submission.** The HSP Agentic Payment integration is complete and tested end to end against a local copy of HSP's MCP server; it goes live as soon as HSP confirms our QA allowlist and the test token. Until then, the demo runs the HSP Settlement Protocol flow (signed EIP-712 mandate → transfer from the agent's own wallet → observe → SETTLED) against our built-in Coordinator, with real transfers on **HSK Chain testnet** in a test USDC we deployed (`0x902186b2e62469265d47158ca4b8e7664488cc71`). Switching rails is one config change (`HSP_MODE`).
 
 `PassportRegistry` is deployed on **HSK Chain mainnet**: identity, rules and the settlement ledger.
 

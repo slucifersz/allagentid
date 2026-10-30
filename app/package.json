@@ -12,6 +12,7 @@
     "deploy:passports": "MODE=live tsx src/deploy-live.ts",
     "deploy:test-usdc": "MODE=live tsx src/deploy-test-usdc.ts",
     "check:hsp": "MODE=live tsx src/check-hsp.ts",
+    "check:hsp-mcp": "MODE=live tsx src/check-hsp-mcp.ts",
     "typecheck": "tsc --noEmit",
     "faucet": "MODE=live tsx src/faucet.ts"
   },

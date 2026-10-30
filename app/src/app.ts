@@ -10,19 +10,38 @@ import { agentUrl, createSellerRouter } from "./agents/seller.js";
 import { ANVIL_ADAPTER, bootChain, seedAgents } from "./bootstrap.js";
 import crypto from "node:crypto";
 import { paymentNet, registryNet, signTransferAuthorization, stable, toUnits } from "./chain.js";
-import { HSP_MODE, MODE, PORT, PUBLIC_URL, ROOT, live, merchant } from "./config.js";
+import { HSP_MODE, MODE, PORT, PUBLIC_URL, ROOT, agentic, live, merchant } from "./config.js";
 import { emit, onEvent, recentEvents } from "./events.js";
 import { Coordinator, type HspChainInfo } from "./hsp/coordinator.js";
 import { createCoordinatorEmulator } from "./hsp/emulator.js";
 import { MerchantClient } from "./hsp/merchant.js";
 import { loadMerchantKeys } from "./hsp/merchant-crypto.js";
 import { createMerchantEmulator } from "./hsp/merchant-emulator.js";
-import { CoordinatorRail, MerchantRail, type Rail } from "./rails.js";
+import { AgenticRail, CoordinatorRail, MerchantRail, type Rail } from "./rails.js";
+import { HspAgentic } from "./hsp/agentic.js";
+import { createAgenticEmulator } from "./hsp/agentic-emulator.js";
 import { Cards } from "./cards.js";
 import { buildMcpServer } from "./mcp.js";
 import { store } from "./store.js";
 
 const { registry, localToken } = await bootChain();
+
+/** Pick the HSP token on PAYMENT_NETWORK from get_chain_config. */
+async function agenticRail(hsp: HspAgentic, deferred: boolean): Promise<Rail> {
+  if (deferred) {
+    // local emulator: its config is known without a round trip
+    const cfg = { network: paymentNet.config.hspName, chainId: paymentNet.config.chainId, symbol: "USDC", address: localToken!, decimals: 6, protocol: "eip3009" };
+    return new AgenticRail(hsp, cfg, agentic.merchantName, `HSP Agentic Payment (local) · ${agentic.merchantName}`, agentic.pollMs);
+  }
+  const { tokens } = await hsp.chainConfig();
+  const pick = tokens.filter((t) => t.chainId === paymentNet.config.chainId && t.symbol.toUpperCase() === agentic.token.toUpperCase());
+  const cfg = pick.find((t) => t.protocol === "eip3009") ?? pick[0];
+  if (!cfg) {
+    const offered = tokens.map((t) => `${t.network}(${t.chainId}) ${t.symbol} ${t.protocol}`).join(", ");
+    throw new Error(`HSP get_chain_config has no ${agentic.token} on ${paymentNet.config.label} (chain ${paymentNet.config.chainId}). Offered: ${offered}. Set PAYMENT_NETWORK / HSP_TOKEN to one of these.`);
+  }
+  return new AgenticRail(hsp, cfg, agentic.merchantName, `HSP Agentic Payment (QA) · ${agentic.merchantName}`, agentic.pollMs);
+}
 const app = express();
 app.use(express.json({ limit: "1mb" }));
 app.use(express.static(path.join(ROOT, "public")));
@@ -30,7 +49,16 @@ app.use(express.static(path.join(ROOT, "public")));
 // HSP rail (HSP_MODE): Settlement Protocol via a hosted or built-in Coordinator, or the
 // HashKey Merchant gateway. In local mode the HSP side is always an in-process emulator.
 let rail: Rail;
-if (HSP_MODE === "merchant") {
+if (HSP_MODE === "agentic") {
+  let url = agentic.url;
+  if (MODE === "local") {
+    app.use("/hsp-agentic", createAgenticEmulator({ token: localToken!, relayerKey: ANVIL_ADAPTER, publicUrl: `${PUBLIC_URL}/hsp-agentic` }));
+    url = `http://localhost:${PORT}/hsp-agentic/`;
+  }
+  const hsp = new HspAgentic(url);
+  // the server isn't listening yet in local mode, so the emulator is read once it is (see below)
+  rail = await agenticRail(hsp, MODE === "local");
+} else if (HSP_MODE === "merchant") {
   const keys = loadMerchantKeys(merchant.keyPath);
   let client: MerchantClient;
   let token: Hex;

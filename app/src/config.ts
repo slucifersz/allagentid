@@ -25,6 +25,9 @@ const NETWORKS: Record<string, NetworkConfig> = {
   local: { hspName: "local", chainId: 31337, rpcUrl: process.env.LOCAL_RPC_URL ?? "http://127.0.0.1:8545", explorer: "", label: "Local chain" },
   "hashkey-testnet": { hspName: "hashkey-testnet", chainId: 133, rpcUrl: "https://testnet.hsk.xyz", explorer: "https://testnet-explorer.hsk.xyz", label: "HSK Chain Testnet" },
   hashkey: { hspName: "hashkey", chainId: 177, rpcUrl: "https://mainnet.hsk.xyz", explorer: "https://hsk.blockscout.com", label: "HSK Chain Mainnet" },
+  // other HSP QA testnets, in case get_chain_config offers them instead of HSK testnet
+  "base-sepolia": { hspName: "base-sepolia", chainId: 84532, rpcUrl: "https://sepolia.base.org", explorer: "https://sepolia.basescan.org", label: "Base Sepolia" },
+  sepolia: { hspName: "sepolia", chainId: 11155111, rpcUrl: "https://ethereum-sepolia-rpc.publicnode.com", explorer: "https://sepolia.etherscan.io", label: "Ethereum Sepolia" },
 };
 
 function network(key: string, rpcOverride?: string): NetworkConfig {
@@ -72,12 +75,24 @@ export const merchant = {
   name: process.env.MERCHANT_NAME || "AllScale",
 };
 
+/** HSP Agentic Payment: the hackathon's HSP QA MCP server (our egress IP must be allowlisted). */
+export const agentic = {
+  url: process.env.HSP_MCP_URL || "https://mcp-qa.hashkeymerchant.com/",
+  /** Team attribution label for HSP's post-event aggregation: keep it identical everywhere. */
+  merchantName: process.env.HSP_MERCHANT_NAME || "AllScale",
+  /** Token symbol to pay in, from get_chain_config on PAYMENT_NETWORK */
+  token: process.env.HSP_TOKEN || "USDC",
+  /** The guide asks for one query every 15 s */
+  pollMs: Number(process.env.HSP_POLL_MS || (MODE === "local" ? 1000 : 15000)),
+};
+
 /**
  * Which HSP rail pays:
  *   builtin     — HSP Settlement Protocol flow against the built-in Coordinator
  *   coordinator — the same flow against a hosted HSP Coordinator (HSP_COORDINATOR_URL)
  *   merchant    — HashKey Merchant gateway orders (HSP_APP_KEY / HSP_APP_SECRET)
+ *   agentic     — HSP Agentic Payment MCP server (HSP QA, allowlisted egress IP)
  * In local mode every rail runs against local emulators.
  */
-export const HSP_MODE = (process.env.HSP_MODE || (live.coordinatorUrl ? "coordinator" : merchant.appKey ? "merchant" : "builtin")) as "builtin" | "coordinator" | "merchant";
-if (!["builtin", "coordinator", "merchant"].includes(HSP_MODE)) throw new Error(`HSP_MODE must be builtin, coordinator or merchant (got ${HSP_MODE})`);
+export const HSP_MODE = (process.env.HSP_MODE || (live.coordinatorUrl ? "coordinator" : merchant.appKey ? "merchant" : "builtin")) as "builtin" | "coordinator" | "merchant" | "agentic";
+if (!["builtin", "coordinator", "merchant", "agentic"].includes(HSP_MODE)) throw new Error(`HSP_MODE must be builtin, coordinator, merchant or agentic (got ${HSP_MODE})`);

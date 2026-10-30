@@ -101,7 +101,7 @@ export async function seedAgents(registry: import("./chain.js").Registry, token:
       const hash = await w.writeContract({ address: token, abi: tokenArtifact.abi, functionName: "mint", args: [to, toUnits(BUYER.fundUsd)] } as never);
       await paymentNet.client.waitForTransactionReceipt({ hash });
     }
-  } else if (live.testStablecoin) {
+  } else if (live.testStablecoin && token.toLowerCase() === live.stablecoin.toLowerCase()) {
     // fallback on HSK testnet: the operator keeps the paying agents stocked with test USDC and gas
     const w = paymentNet.wallet(live.operatorKey as Hex);
     for (const a of [buyer, client]) {
