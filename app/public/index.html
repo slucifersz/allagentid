@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentPassport</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%235b5bf7'/><path d='M10 9h9a5 5 0 0 1 0 10h-5v5h-4z' fill='white'/></svg>">
+<style>
+:root {
+  --bg: #f6f6f9; --panel: #fff; --ink: #14141f; --muted: #6b6b80; --line: #e6e6ee;
+  --accent: #5b5bf7; --accent-ink: #fff; --ok: #12a150; --warn: #c27c0e; --bad: #d23c3c;
+  --chip: #f0f0f6; --shadow: 0 1px 2px rgba(20,20,40,.05), 0 4px 16px rgba(20,20,40,.04);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e0e14; --panel: #17171f; --ink: #ececf3; --muted: #9a9ab0; --line: #2a2a36; --accent: #8080ff; --chip: #22222d; --shadow: none;
+}}
+:root[data-theme="dark"] { --bg: #0e0e14; --panel: #17171f; --ink: #ececf3; --muted: #9a9ab0; --line: #2a2a36; --accent: #8080ff; --chip: #22222d; --shadow: none; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; }
+header { display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; }
+.logo small { font-weight: 500; color: var(--muted); font-size: 13px; }
+.badge { padding: 3px 9px; border-radius: 99px; background: var(--chip); color: var(--muted); font-size: 12px; white-space: nowrap; }
+.badge.live { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
+.demo { font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 99px; background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); white-space: nowrap; }
+.spacer { flex: 1; }
+button { font: inherit; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 7px 14px; border-radius: 9px; cursor: pointer; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+button:disabled { opacity: .5; cursor: default; }
+.hero { padding: 22px 20px 6px; display: flex; gap: 24px; align-items: end; flex-wrap: wrap; }
+.hero h1 { margin: 0; font-size: 24px; letter-spacing: -.01em; max-width: 760px; }
+.hero p { margin: 6px 0 0; color: var(--muted); max-width: 760px; }
+.pillars { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.pillars span { background: var(--panel); border: 1px solid var(--line); border-radius: 99px; padding: 3px 10px; font-size: 12px; }
+.stats { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 8px 14px; min-width: 110px; }
+.stat b { display: block; font-size: 19px; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 12px; }
+main { display: grid; grid-template-columns: 380px minmax(0, 1fr) 340px; gap: 16px; padding: 16px 20px 28px; }
+@media (max-width: 1220px) { main { grid-template-columns: 1fr 1fr; } #feedCol { grid-column: 1 / -1; } }
+@media (max-width: 780px) { main { grid-template-columns: 1fr; padding: 12px 16px; } header, .hero { padding-left: 16px; padding-right: 16px; } }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 14px; min-width: 0; }
+section h2 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.row:last-child { border-bottom: 0; }
+.row .k { color: var(--muted); font-size: 12px; width: 96px; flex: none; }
+.row .v { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.big { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tier { font-size: 11px; padding: 2px 7px; border-radius: 99px; font-weight: 600; white-space: nowrap; }
+.t0 { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad); }
+.t1 { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.t2 { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
+.policy { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%; }
+.policy label { font-size: 11px; color: var(--muted); display: flex; flex-direction: column; gap: 2px; }
+input, select { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; width: 100%; min-width: 0; }
+.card-vis { border-radius: 14px; padding: 14px 16px; color: #fff; background: linear-gradient(135deg, #2b2bd9, #7b2cbf 60%, #d4145a); min-height: 120px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+.card-vis .net { font-weight: 800; font-style: italic; font-size: 18px; letter-spacing: .02em; }
+.card-vis .num { font-family: ui-monospace, Menlo, monospace; font-size: 16px; letter-spacing: .12em; }
+.card-vis .meta { display: flex; justify-content: space-between; font-size: 11px; opacity: .85; }
+.card-vis .demo { position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,.22); color: #fff; }
+.otc { border: 1px dashed var(--line); border-radius: 10px; padding: 8px 10px; margin-top: 8px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+.issue { display: grid; grid-template-columns: 1fr 90px auto; gap: 6px; margin-top: 10px; }
+.note { color: var(--muted); font-size: 11.5px; margin-top: 8px; }
+.pp { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; font-size: 13px; }
+.pp:last-child { border-bottom: 0; }
+.pp .h { font-weight: 600; }
+.pp .m { color: var(--muted); font-size: 12px; }
+.act { display: grid; grid-template-columns: 180px 1fr auto; gap: 8px; }
+@media (max-width: 780px) { .act, .issue { grid-template-columns: 1fr; } }
+.job { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-top: 10px; }
+.job-top { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pill { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; text-transform: uppercase; letter-spacing: .04em; }
+.dir { font-size: 11px; font-weight: 700; color: var(--muted); }
+.s-completed { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
+.s-rejected, .s-failed { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad); }
+.s-awaiting_approval, .s-awaiting_checkout { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
+.s-running { background: var(--chip); color: var(--muted); }
+.job-task { color: var(--muted); margin: 6px 0 0; overflow-wrap: anywhere; }
+.job-links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; font-size: 12px; }
+.deliv { margin-top: 10px; }
+.deliv img { width: 140px; border-radius: 8px; border: 1px solid var(--line); }
+.deliv pre { margin: 0; white-space: pre-wrap; background: var(--bg); border-radius: 8px; padding: 9px; font-size: 12.5px; overflow: auto; max-height: 200px; }
+.approve { display: flex; gap: 8px; margin-top: 10px; align-items: center; flex-wrap: wrap; }
+.feed { list-style: none; margin: 0; padding: 0; max-height: 820px; overflow: auto; }
+.feed li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); animation: in .25s ease-out; }
+.feed li:last-child { border-bottom: 0; }
+.feed .ic { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-size: 12px; background: var(--chip); }
+.feed .t { font-weight: 550; overflow-wrap: anywhere; }
+.feed .d { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.k-reject .ic { background: color-mix(in srgb, var(--bad) 16%, transparent); }
+.k-chain .ic, .k-passport .ic, .k-deliver .ic { background: color-mix(in srgb, var(--ok) 16%, transparent); }
+.k-approval .ic, .k-card .ic { background: color-mix(in srgb, var(--warn) 18%, transparent); }
+@keyframes in { from { opacity: 0; transform: translateY(-3px); } }
+.empty { color: var(--muted); padding: 14px 0; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M10 9h9a5 5 0 0 1 0 10h-5v5h-4z" fill="#fff"/></svg>
+    AgentPassport <small>by AllScale</small>
+  </div>
+  <span class="badge" id="net">…</span>
+  <span class="badge" id="rail">HSP</span>
+  <span class="spacer"></span>
+  <a class="mono" id="registry" target="_blank"></a>
+  <button class="primary" id="demoBtn">▶ Run the demo</button>
+</header>
+
+<div class="hero">
+  <div>
+    <h1>One onboarding. Your agent gets an identity, an account, payments and a card.</h1>
+    <p>AgentPassport is AllScale's one-stop financial identity for AI agents. The passport lives on HSK Chain; payments with other agents and merchants settle through HSP, always within the owner's rules.</p>
+    <div class="pillars"><span>🪪 Identity</span><span>💰 Account &amp; balance</span><span>⚡ Receive &amp; pay via HSP</span><span>🛡 Spending rules</span><span>💳 US card <span class="demo">coming soon</span></span></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="stPass">–</b><span>passports</span></div>
+    <div class="stat"><b id="stSett">–</b><span>HSP settlements</span></div>
+    <div class="stat"><b id="stVol">–</b><span>USDC settled</span></div>
+  </div>
+</div>
+
+<main>
+  <div class="col">
+    <section>
+      <h2>@nova.agent · account</h2>
+      <div id="account"><div class="empty">Loading…</div></div>
+    </section>
+    <section>
+      <h2>AgentCard <span class="demo">demo · coming soon</span></h2>
+      <div id="cards"></div>
+      <div class="issue">
+        <input id="cMerchant" value="Online store order" aria-label="Merchant">
+        <input id="cAmount" value="4.50" aria-label="Amount (USD)">
+        <button id="issueBtn">Issue one-time card</button>
+      </div>
+      <div class="note">A US Visa card for the agent: a long-term card plus single-use cards per order, spendable at any card-accepting merchant. The passport's limits apply before a card is issued. This is a simulation: no real card is created. Cards are coming soon via an issuing partner.</div>
+    </section>
+    <section>
+      <h2>Other passports</h2>
+      <div id="others"></div>
+    </section>
+  </div>
+
+  <div class="col">
+    <section>
+      <h2>Receive</h2>
+      <div class="act">
+        <span class="mono" style="align-self:center">@atlas.client → @nova.agent</span>
+        <input id="rTask" value="Market brief: stablecoin checkout in India" aria-label="What Atlas pays Nova for">
+        <button class="primary" id="receiveBtn">Get paid via HSP</button>
+      </div>
+    </section>
+    <section>
+      <h2>Pay</h2>
+      <div class="act">
+        <select id="seller" aria-label="Pay to"></select>
+        <input id="task" value="Diwali sale: 50% off when you pay with stablecoins" aria-label="What for">
+        <button class="primary" id="payBtn">Pay via HSP</button>
+      </div>
+      <div class="note">Quote verified → both passports and the owner's rules checked on-chain → HSP mandate signed → USDC settles on HSK Chain → recorded on both passports.</div>
+    </section>
+    <section>
+      <h2>Payments</h2>
+      <div id="jobs"><div class="empty">No payments yet. Run the demo, or receive or pay above.</div></div>
+    </section>
+  </div>
+
+  <div class="col" id="feedCol">
+    <section>
+      <h2>Live activity</h2>
+      <ul class="feed" id="feed"></ul>
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const short = (a) => a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "";
+const ICONS = { a2a: "💬", mandate: "🧾", check: "🛂", sign: "✍️", hsp: "⚡", chain: "⛓", deliver: "📦", reject: "⛔", approval: "🙋", passport: "🪪", card: "💳", info: "👤" };
+let S = null, EXP = { pay: "", reg: "" };
+const txLink = (h, label = "tx", net = "pay") => h ? (EXP[net] ? `<a href="${EXP[net]}/tx/${h}" target="_blank">${label} ${short(h)}</a>` : `<span class="mono">${label} ${short(h)}</span>`) : "";
+const NOVA = "nova.agent";
+
+async function api(path, body) {
+  const r = await fetch(path, body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || r.status);
+  return j;
+}
+
+function renderAccount() {
+  const a = S.account, id = a.identity || {}, r = a.rules || {};
+  const me = S.passports.find((p) => p.handle === NOVA) || {};
+  $("account").innerHTML = `
+    <div class="row"><span class="k">Identity</span><span class="v"><span class="tier t${id.tier}">${esc(id.tierName)}</span> <span class="mono">${me.walletUrl ? `<a href="${me.walletUrl}" target="_blank">${short(id.wallet)}</a>` : short(id.wallet)}</span><br><span class="mono" style="color:var(--muted)">passport on ${esc(id.network)}</span></span></div>
+    <div class="row"><span class="k">Balance</span><span class="v"><span class="big">${esc(a.balances.stablecoin.amount)}</span> USDC <span class="mono" style="color:var(--muted)">· ${esc(a.balances.stablecoin.network)}</span></span></div>
+    <div class="row"><span class="k">AllScale account</span><span class="v">USD account (AllScale VA) <span class="demo">coming soon</span></span></div>
+    <div class="row"><span class="k">Payments</span><span class="v">received ${a.payments.received}× · ${esc(a.payments.volumeReceived)} USDC<br>paid ${a.payments.paid}× · ${esc(a.payments.volumePaid)} USDC</span></div>
+    <div class="row"><span class="k">Rules</span><span class="v">
+      <div class="policy">
+        <label>Per payment<input id="pt" value="${r.perTxLimit}"></label>
+        <label>Per day<input id="pd" value="${r.dailyLimit}"></label>
+        <label>Pay agents ≥<select id="pm">${[0, 1, 2].map((t) => `<option value="${t}" ${t === r.minCounterpartyTier ? "selected" : ""}>${["any", "KYC", "human"][t]}</option>`).join("")}</select></label>
+      </div>
+      <div class="mono" style="color:var(--muted);margin-top:6px">spent today: ${esc(r.spentToday)} via HSP + ${esc(r.cardSpentToday)} by card</div>
+      <button style="margin-top:8px;width:100%" id="saveRules">Save rules on-chain</button></span></div>`;
+  $("saveRules").onclick = async (e) => {
+    e.target.disabled = true; e.target.textContent = "Writing to chain…";
+    try { await api(`/api/passports/${NOVA}/policy`, { perTxUsd: $("pt").value, dailyUsd: $("pd").value, minTier: $("pm").value }); } catch (err) { alert(err.message); }
+    refresh();
+  };
+
+  const [lt, ...ot] = a.cards;
+  $("cards").innerHTML = `<div class="card-vis"><span class="demo">demo</span><div class="net">VISA</div><div class="num">•••• •••• •••• ${esc(lt.last4)}</div><div class="meta"><span>@nova.agent · AgentCard</span><span>exp ${esc(lt.expires)}</span></div></div>` +
+    ot.reverse().map((c) => `<div class="otc">💳 <b>•••• ${esc(c.last4)}</b> single use · $${esc(c.limitUsd)} at ${esc(c.merchant)} <span class="spacer"></span><span class="demo">demo</span></div>`).join("");
+}
+
+function renderOthers() {
+  const ps = S.passports.filter((p) => p.handle !== NOVA);
+  $("others").innerHTML = ps.map((p) => {
+    const pp = p.passport || {};
+    return `<div class="pp"><span class="h">@${esc(p.handle)}</span><span class="tier t${pp.tier}">${esc(pp.tierName)}</span><span class="spacer"></span>
+      <span class="m">${p.role === "client" ? `client · ${esc(p.balance)} USDC` : `${esc(p.skill)} · ${esc(p.price)} USDC${p.perCall ? "/call" : ""}`}</span></div>`;
+  }).join("");
+  const sel = $("seller"), cur = sel.value;
+  sel.innerHTML = ps.filter((p) => p.role === "seller").map((p) => `<option value="${p.handle}">@${p.handle} · ${p.price} USDC</option>`).join("");
+  if (cur) sel.value = cur;
+  $("stPass").textContent = S.passports.length;
+  $("stSett").textContent = S.passports.reduce((s, p) => s + (p.passport?.settlementsReceived || 0), 0);
+  $("stVol").textContent = S.passports.reduce((s, p) => s + Number(p.passport?.volumeReceived || 0), 0).toFixed(2);
+}
+
+function deliverable(d) {
+  if (!d) return "";
+  if (d.kind === "svg") return `<div class="deliv"><img alt="${esc(d.title)}" src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(d.content)}"></div>`;
+  return `<div class="deliv"><pre>${esc(d.content)}</pre></div>`;
+}
+
+function renderJobs() {
+  if (!S.jobs.length) return;
+  $("jobs").innerHTML = S.jobs.map((j) => {
+    const incoming = j.seller === NOVA;
+    return `<div class="job">
+    <div class="job-top"><span class="pill s-${j.status}">${j.status.replace("_", " ")}</span><span class="dir">${incoming ? "RECEIVED" : "PAID"}</span>
+      <b>@${esc(j.payer)} → @${esc(j.seller)}</b><span class="spacer"></span><b>${j.amount ? esc(j.amount) + " USDC" : ""}</b></div>
+    <p class="job-task">“${esc(j.task)}”</p>
+    ${j.reason ? `<div class="job-links">${esc(j.reason)}</div>` : ""}
+    <div class="job-links">${j.hspUrl ? `<a href="${j.hspUrl}" target="_blank">HSP record</a>` : ""}${txLink(j.paymentTx, "transfer", "pay")}${txLink(j.settlementTx, "passport ledger", "reg")}</div>
+    ${j.status === "awaiting_checkout" ? `<div class="approve"><a href="${j.checkoutUrl}" target="_blank"><button class="primary">Pay at HSP checkout</button></a><span class="job-task">The owner's wallet pays at HSP checkout; this finishes when HSP reports it settled.</span></div>` : ""}
+    ${j.status === "awaiting_approval" ? `<div class="approve"><button class="primary" onclick="decide('${j.id}', true, this)">Approve with Passkey</button><button onclick="decide('${j.id}', false, this)">Decline</button></div>` : ""}
+    ${deliverable(j.deliverable)}
+  </div>`;
+  }).join("");
+}
+
+let refreshing = null;
+async function refresh() {
+  if (refreshing) return refreshing;
+  refreshing = api("/api/state").then((s) => {
+    S = s;
+    EXP = { pay: s.paymentNet.explorer, reg: s.registryNet.explorer };
+    $("net").textContent = s.mode === "live" ? `Passports: ${s.registryNet.label} · Payments: ${s.paymentNet.label}${s.testStablecoin ? " (test USDC)" : ""}` : "Local chain · HSP emulator";
+    $("net").className = "badge" + (s.mode === "live" ? " live" : "");
+    $("rail").textContent = s.hsp;
+    $("registry").textContent = "Registry " + short(s.registry);
+    if (s.registryUrl) $("registry").href = s.registryUrl;
+    renderAccount(); renderOthers(); renderJobs();
+  }).finally(() => (refreshing = null));
+  return refreshing;
+}
+
+let timer;
+const soon = () => { clearTimeout(timer); timer = setTimeout(refresh, 250); };
+
+function addEvent(e) {
+  const li = document.createElement("li");
+  li.className = `k-${e.kind}`;
+  li.innerHTML = `<div class="ic">${ICONS[e.kind] || "•"}</div><div><div class="t">${esc(e.title)}</div>${e.detail ? `<div class="d">${esc(e.detail)}</div>` : ""}${e.txHash ? `<div class="d">${txLink(e.txHash, "tx", e.kind === "passport" ? "reg" : "pay")}</div>` : ""}</div>`;
+  $("feed").prepend(li);
+  soon();
+}
+
+new EventSource("/api/events").onmessage = (m) => addEvent(JSON.parse(m.data));
+
+async function busy(btn, label, fn) {
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = label;
+  try { await fn(); } catch (e) { alert(e.message); } finally { btn.disabled = false; btn.textContent = old; refresh(); }
+}
+$("receiveBtn").onclick = (e) => busy(e.target, "Settling…", () => api("/api/receive", { task: $("rTask").value }));
+$("payBtn").onclick = (e) => busy(e.target, "Settling…", () => api("/api/hire", { seller: $("seller").value, task: $("task").value }));
+$("issueBtn").onclick = (e) => busy(e.target, "Issuing…", async () => {
+  const r = await api(`/api/accounts/${NOVA}/cards`, { merchant: $("cMerchant").value, amountUsd: $("cAmount").value });
+  if (!r.ok) alert(`Card refused: ${r.reason}`);
+});
+$("demoBtn").onclick = async () => { try { await api("/api/demo", {}); } catch (e) { alert(e.message); } };
+
+async function decide(id, ok, btn) {
+  btn.disabled = true;
+  try { await api(`/api/jobs/${id}/${ok ? "approve" : "decline"}`, {}); } catch (e) { alert(e.message); }
+  refresh();
+}
+
+refresh();
+</script>
+</body>
+</html>
