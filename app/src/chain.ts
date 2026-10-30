@@ -14,6 +14,7 @@ import {
   type Abi,
   type Address,
   type Hex,
+  nonceManager,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { CONTRACTS_OUT, PAYMENT_NET, REGISTRY_NET, type NetworkConfig } from "./config.js";
@@ -38,7 +39,8 @@ function makeNet(n: NetworkConfig) {
   return {
     config: n,
     client,
-    wallet: (key: Hex) => createWalletClient({ account: privateKeyToAccount(key), chain, transport: http(n.rpcUrl) }),
+    // nonceManager: track nonces locally, since a lagging RPC node can report a stale count
+    wallet: (key: Hex) => createWalletClient({ account: privateKeyToAccount(key, { nonceManager }), chain, transport: http(n.rpcUrl) }),
     txUrl: (h: string) => (n.explorer ? `${n.explorer}/tx/${h}` : ""),
     addressUrl: (a: string) => (n.explorer ? `${n.explorer}/address/${a}` : ""),
   };
@@ -81,7 +83,17 @@ export class Registry {
   constructor(public address: Hex, private operatorKey: Hex) {}
 
   private async write(functionName: string, args: unknown[]) {
-    const hash = await registryNet.wallet(this.operatorKey).writeContract({ address: this.address, abi: registryArtifact.abi, functionName, args } as never);
+    // HSK's public RPC is load-balanced: right after a receipt, the next simulation can hit a node
+    // that hasn't seen that block yet. A revert before sending costs nothing, so retry it briefly.
+    let hash: Hex | undefined;
+    for (let attempt = 1; !hash; attempt++) {
+      try {
+        hash = await registryNet.wallet(this.operatorKey).writeContract({ address: this.address, abi: registryArtifact.abi, functionName, args } as never);
+      } catch (e) {
+        if (attempt >= 6 || !/revert|nonce/i.test((e as Error).message)) throw e;
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+    }
     const receipt = await registryNet.client.waitForTransactionReceipt({ hash });
     if (receipt.status !== "success") throw new Error(`${functionName} reverted (${hash})`);
     return hash;

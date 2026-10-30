@@ -7,11 +7,16 @@
 **One-liner:** AllScale's one-stop financial identity for AI agents. One onboarding gives an agent an on-chain identity, a balance, HSP payments with other agents and merchants, spending rules, and a US card (coming soon).
 
 **Links**
-- GitHub: `<repo URL>`
+- GitHub: https://github.com/slucifersz/agentpassport
 - Demo video: `<YouTube / Loom URL>`
-- PassportRegistry on HSK Chain mainnet: `<address>`, https://hsk.blockscout.com/address/<address>
-- Example HSP payment (HSK testnet): `<HSP record / tx link>`
-- Test USDC on HSK testnet: `<address>`, https://testnet-explorer.hsk.xyz/address/<address>
+- PassportRegistry on HSK Chain mainnet: `0x902186b2e62469265d47158ca4b8e7664488cc71`, https://hsk.blockscout.com/address/0x902186b2e62469265d47158ca4b8e7664488cc71
+- Example HSP payment, nova.agent → pixel.design, 2 USDC:
+  - USDC transfer (HSK testnet): https://testnet-explorer.hsk.xyz/tx/0x914eef8d6e5cf29a0085ffd893cfb1eccbf3e4b5cf27accc66ee0d287b573748
+  - Settlement recorded on both passports (HSK mainnet): https://hsk.blockscout.com/tx/0x8260ad90100e7f2133af14083ba0a55ff1e41329433d37f81c930a555b6c1e84
+- Example receive, atlas.client → nova.agent, 3 USDC:
+  - USDC transfer (HSK testnet): https://testnet-explorer.hsk.xyz/tx/0xdaf921d5c885d62d3883b28ec65e52f039631fb88fe218aba995a404bd0a5873
+  - Settlement recorded (HSK mainnet): https://hsk.blockscout.com/tx/0x49bcaf6cf2fcff9145e5d39ab33eb50678e800423a6cada400249a510d991797
+- Test USDC on HSK testnet: `0x902186b2e62469265d47158ca4b8e7664488cc71`, https://testnet-explorer.hsk.xyz/address/0x902186b2e62469265d47158ca4b8e7664488cc71
 - Live demo: `<public URL>`
 
 ---
@@ -48,7 +53,7 @@ A payment between agents works like this:
 - **HashKey Merchant gateway.** Seller quotes are real HSP orders: ES256K-signed Cart Mandates with `pay_to` set to the seller's passport wallet. The agent submits the Payment Mandate by API where HSP allows it; otherwise the owner pays at HSP checkout.
 - **HSP Settlement Protocol.** The agent signs an EIP-712 mandate, settles the transfer from its own wallet, and the Coordinator verifies it.
 
-**What runs in this submission.** The hosted HSP sandbox from earlier editions is offline, and we are still waiting for HashKey Merchant credentials. So this submission runs the HSP Settlement Protocol flow (signed EIP-712 mandate → transfer from the agent's own wallet → observe → SETTLED) against our built-in Coordinator, with real transfers on **HSK Chain testnet** in a test USDC we deployed (`<test USDC address>`). The merchant rail is fully implemented and switches on with one config change once credentials arrive. We have asked the organizers about merchant onboarding, agent pay-by-API and the sandbox.
+**What runs in this submission.** The hosted HSP sandbox from earlier editions is offline, and we are still waiting for HashKey Merchant credentials. So this submission runs the HSP Settlement Protocol flow (signed EIP-712 mandate → transfer from the agent's own wallet → observe → SETTLED) against our built-in Coordinator, with real transfers on **HSK Chain testnet** in a test USDC we deployed (`0x902186b2e62469265d47158ca4b8e7664488cc71`). The merchant rail is fully implemented and switches on with one config change once credentials arrive. We have asked the organizers about merchant onboarding, agent pay-by-API and the sandbox.
 
 `PassportRegistry` is deployed on **HSK Chain mainnet**: identity, rules and the settlement ledger.
 
