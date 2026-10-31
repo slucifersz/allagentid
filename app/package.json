@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "MODE=local tsx src/server.ts",
     "live": "MODE=live tsx src/server.ts",
+    "live:hsp": "MODE=live HSP_MODE=agentic PAYMENT_NETWORK=${PAYMENT_NETWORK:-base-sepolia} STABLECOIN_ADDRESS= TEST_STABLECOIN=0 PORT=4310 PUBLIC_URL=http://localhost:4310 NODE_USE_ENV_PROXY=1 tsx src/server.ts",
     "mcp": "tsx src/mcp-stdio.ts",
     "setup:keys": "tsx src/setup-keys.ts",
     "deploy:passports": "MODE=live tsx src/deploy-live.ts",
