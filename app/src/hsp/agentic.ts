@@ -83,16 +83,23 @@ function parseResult(name: string, r: { content?: unknown; structuredContent?: u
 /** Walk get_chain_config output for every (network, token) pair, whatever the nesting. */
 export function tokensFromConfig(cfg: unknown): AgenticToken[] {
   const out: AgenticToken[] = [];
+  // HSP QA returns flat {networks: [{chain_id, name}], tokens: [{chain_id, address, ...}]}
+  const names = new Map<number, string>();
+  const nets = (cfg as { networks?: unknown })?.networks;
+  if (Array.isArray(nets)) for (const n of nets as Record<string, unknown>[]) names.set(Number(n.chain_id ?? n.chainId), String(n.name ?? n.network ?? n.chain_id));
   const visit = (node: unknown, net?: { network: string; chainId: number }) => {
     if (Array.isArray(node)) return node.forEach((n) => visit(n, net));
     if (!node || typeof node !== "object") return;
     const o = node as Record<string, unknown>;
     const chainId = Number(o.chain_id ?? o.chainId ?? NaN);
-    const here = Number.isFinite(chainId) ? { network: String(o.network ?? o.name ?? o.chain ?? chainId), chainId } : net;
-    if (Array.isArray(o.tokens) && here) {
+    const here = Number.isFinite(chainId) ? { network: String(o.network ?? names.get(chainId) ?? o.name ?? o.chain ?? chainId), chainId } : net;
+    if (Array.isArray(o.tokens)) {
       for (const t of o.tokens as Record<string, unknown>[]) {
+        const tid = Number(t.chain_id ?? t.chainId ?? NaN);
+        const tnet = Number.isFinite(tid) ? { network: String(t.network ?? names.get(tid) ?? tid), chainId: tid } : here;
+        if (!tnet) continue;
         out.push({
-          ...here,
+          ...tnet,
           symbol: String(t.symbol ?? t.coin ?? t.name ?? ""),
           address: String(t.address ?? t.contract_address ?? ""),
           decimals: Number(t.decimals ?? 6),
