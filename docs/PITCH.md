@@ -1,7 +1,7 @@
 # Pitch deck outline (6 slides, about 4 minutes on Demo Day)
 
 1. **Agents are starting to transact, but they have no financial identity.** Nobody knows who an agent is. It has nowhere to hold money, get paid or pay. Its owner can't cap its spend. Every capability is a separate integration.
-2. **AgentPassport by AllScale: one onboarding, five capabilities.**
+2. **AllScale Agent ID: one onboarding, five capabilities.**
    - Identity: an on-chain passport
    - Account and balance
    - Receive and pay through HSP

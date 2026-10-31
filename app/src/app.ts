@@ -304,7 +304,7 @@ app.get("/mcp", (_req, res) => res.status(405).json({ error: "use POST" }));
 await seedAgents(registry, token);
 
 app.listen(PORT, () => {
-  console.log(`\nAgentPassport · ${MODE === "live" ? `passports on ${registryNet.config.label}, HSP on ${paymentNet.config.label}` : "local chain + HSP emulator"}`);
+  console.log(`\nAllScale Agent ID · ${MODE === "live" ? `passports on ${registryNet.config.label}, HSP on ${paymentNet.config.label}` : "local chain + HSP emulator"}`);
   console.log(`  Dashboard  ${PUBLIC_URL}`);
   console.log(`  MCP        ${PUBLIC_URL}/mcp`);
   console.log(`  Agents     ${PUBLIC_URL}/agents`);

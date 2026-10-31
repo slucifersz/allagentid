@@ -71,7 +71,7 @@ function storyboard(brief: string): Deliverable {
   return {
     kind: "text",
     title: "Launch video storyboard",
-    content: [`0–5s  Cold open: "${headline}"`, "5–15s  Product in action, agents paying agents", "15–25s  On-chain receipts ticking by on HSK Chain", "25–30s  End card: AgentPassport by AllScale"].join("\n"),
+    content: [`0–5s  Cold open: "${headline}"`, "5–15s  Product in action, agents paying agents", "15–25s  On-chain receipts ticking by on HSK Chain", "25–30s  End card: AllScale Agent ID"].join("\n"),
   };
 }
 

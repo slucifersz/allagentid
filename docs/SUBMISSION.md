@@ -1,13 +1,13 @@
 # DoraHacks BUIDL submission (copy-paste)
 
-**Name:** AgentPassport by AllScale
+**Name:** AllScale Agent ID
 
 **Track:** Agent Payments & A2A Settlement (HSP)
 
 **One-liner:** The financial identity layer for the agent economy. One AllScale onboarding gives any AI agent an on-chain passport on HSK Chain, a balance, real HSP payments with other agents, owner-set guardrails, and a card, live today on HSK mainnet and the HSP Gateway.
 
 **Links**
-- GitHub: https://github.com/slucifersz/agentpassport
+- GitHub: https://github.com/slucifersz/allscaleagentid
 - Demo video: `<YouTube / Loom URL>`
 - PassportRegistry on HSK Chain mainnet: `0x902186b2e62469265d47158ca4b8e7664488cc71`, https://hsk.blockscout.com/address/0x902186b2e62469265d47158ca4b8e7664488cc71
 - Real HSP Agentic Payments (HSP QA Gateway, team `AllScale`, USDC on Base Sepolia; each one also recorded on both passports on HSK mainnet):
@@ -30,7 +30,7 @@ Agents are becoming the fastest-growing class of economic actor, and they are al
 
 ## What we built
 
-**AgentPassport** is a single onboarding that gives an agent everything it needs to transact. Status of each part:
+**AllScale Agent ID** is a single onboarding that gives an agent everything it needs to transact. Status of each part:
 
 | | Capability | Status |
 |---|---|---|
@@ -57,7 +57,7 @@ A payment between agents works like this:
 - **HashKey Merchant gateway.** Seller quotes are real HSP orders: ES256K-signed Cart Mandates with `pay_to` set to the seller's passport wallet. The agent submits the Payment Mandate by API where HSP allows it; otherwise the owner pays at HSP checkout.
 - **HSP Settlement Protocol.** The agent signs an EIP-712 mandate, settles the transfer from its own wallet, and the Coordinator verifies it.
 
-**Live, not mocked.** The demo runs against the **real HSP Agentic Payment server** from our allowlisted infrastructure. Every payment above is an HSP order created by the seller agent, signed by the paying agent's own wallet, broadcast by HSP's Gateway and confirmed through `query_payment` (`payment-safe`, attribution to `AllScale` verified), then written to both passports on HSK mainnet. AgentPassport is network-agnostic on the payment side, and `PAYMENT_NETWORK=hashkey-testnet` or `hashkey` puts the same agents on HSK with no code change.
+**Live, not mocked.** The demo runs against the **real HSP Agentic Payment server** from our allowlisted infrastructure. Every payment above is an HSP order created by the seller agent, signed by the paying agent's own wallet, broadcast by HSP's Gateway and confirmed through `query_payment` (`payment-safe`, attribution to `AllScale` verified), then written to both passports on HSK mainnet. AllScale Agent ID is network-agnostic on the payment side, and `PAYMENT_NETWORK=hashkey-testnet` or `hashkey` puts the same agents on HSK with no code change.
 
 **Why Base Sepolia USDC instead of HSK testnet USDC.** HSP QA serves USDC on several testnets. Its HSK testnet USDC (`0x8FE3cB719Ee4410E236Cd6b72ab1fCDC06eF53c6`) can only be minted by its issuer: there is no public faucet, and it hadn't been distributed to teams before the deadline (we asked the organizers). We didn't want to fake the settlement with a token of our own, so we funded the agents with Base Sepolia USDC from Circle's public faucet, which HSP QA also serves. That way every payment runs through the real HSP Gateway end to end, while identity, rules and the settlement ledger stay on HSK mainnet. Four HSP rails ship in the box (Agentic Payment, Merchant gateway, hosted Coordinator, built-in Coordinator), one env var apart.
 

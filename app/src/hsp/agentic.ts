@@ -121,7 +121,7 @@ export class HspAgentic {
 
   async connect() {
     if (this.client) return this.client;
-    const client = new Client({ name: "agentpassport-allscale", version: "0.1.0" });
+    const client = new Client({ name: "allscale-agent-id", version: "0.1.0" });
     await client.connect(new StreamableHTTPClientTransport(new URL(this.url)));
     const { tools } = await client.listTools();
     for (const t of tools) this.schemas.set(t.name, new Set(Object.keys((t.inputSchema as { properties?: object }).properties ?? {})));

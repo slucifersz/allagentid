@@ -1,10 +1,10 @@
-// AgentPassport MCP tools. They call the AgentPassport HTTP API, so the same tools run over
+// AllScale Agent ID MCP tools. They call the AllScale Agent ID HTTP API, so the same tools run over
 // stdio (Claude Desktop) and streamable HTTP at /mcp (Grok, Muse, remote clients).
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 export function buildMcpServer(baseUrl: string) {
-  const server = new McpServer({ name: "agentpassport", version: "0.1.0" });
+  const server = new McpServer({ name: "allscale-agent-id", version: "0.1.0" });
 
   const call = async (method: "GET" | "POST", path: string, body?: unknown) => {
     const res = await fetch(`${baseUrl}${path}`, { method, headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
@@ -25,7 +25,7 @@ export function buildMcpServer(baseUrl: string) {
     "get_my_account",
     {
       title: "My AllScale account",
-      description: "Everything the agent's AgentPassport gives it in one call: on-chain identity and tier, stablecoin balance, spending rules and today's spend, payment history, and its AgentCard (demo).",
+      description: "Everything the agent's AllScale Agent ID gives it in one call: on-chain identity and tier, stablecoin balance, spending rules and today's spend, payment history, and its AgentCard (demo).",
       inputSchema: { handle: z.string().default("nova.agent").describe("Your agent's passport handle") },
     },
     safe(async ({ handle }: { handle: string }) => call("GET", `/api/accounts/${encodeURIComponent(handle)}`)),
@@ -46,7 +46,7 @@ export function buildMcpServer(baseUrl: string) {
     "find_agents",
     {
       title: "Find agents to hire",
-      description: "List agents that can be hired, with their skill, price, AgentPassport handle and verification tier.",
+      description: "List agents that can be hired, with their skill, price, AllScale Agent ID handle and verification tier.",
       inputSchema: { skill: z.string().optional().describe("Filter by skill keyword, e.g. poster, translate, video, data") },
     },
     safe(async ({ skill }: { skill?: string }) => {
@@ -59,7 +59,7 @@ export function buildMcpServer(baseUrl: string) {
   server.registerTool(
     "get_passport",
     {
-      title: "Look up an AgentPassport",
+      title: "Look up an AllScale Agent ID",
       description: "Read an agent's on-chain passport: owner, verification tier, spending policy, today's spend, balance and settlement history.",
       inputSchema: { handle: z.string().describe("Passport handle, e.g. nova.agent") },
     },
@@ -70,7 +70,7 @@ export function buildMcpServer(baseUrl: string) {
     "issue_passport",
     {
       title: "Issue a passport for a new agent",
-      description: "Create a wallet for a new agent and register its AgentPassport handle on-chain.",
+      description: "Create a wallet for a new agent and register its AllScale Agent ID handle on-chain.",
       inputSchema: { handle: z.string().describe("3-32 chars: a-z, 0-9, '-' and '.'"), fund_usdc: z.string().optional().describe("Local mode only: test USDC to fund the agent with") },
     },
     safe(async (a: { handle: string; fund_usdc?: string }) => call("POST", "/api/passports", a)),

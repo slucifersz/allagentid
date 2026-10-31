@@ -75,7 +75,7 @@ export class PayAgent {
       // 1. Ask for a quote over A2A
       job.a2aUrl = this.d.sellerA2aUrl(seller);
       ev({ kind: "a2a", title: `${payer} → ${seller}: "${task}"`, detail: `A2A message/send` });
-      const quoted = await a2aSend(job.a2aUrl, [{ kind: "text", text: task }], { metadata: { "agentpassport.handle": payer, "agentpassport.wallet": payerWallet } });
+      const quoted = await a2aSend(job.a2aUrl, [{ kind: "text", text: task }], { metadata: { "agentid.handle": payer, "agentid.wallet": payerWallet } });
       const part = quoted.status?.message?.parts?.find((p: { kind: string; data?: Record<string, unknown> }) => p.kind === "data" && p.data?.[QUOTE_KEY]);
       if (!part) throw new Error("seller did not return a quote");
       const q = part.data[QUOTE_KEY] as Quote;
@@ -85,7 +85,7 @@ export class PayAgent {
 
       // 2. Is the quote authentic and payable, and does it pay the seller's passport wallet?
       const sellerWallet = await this.d.registry.resolve(seller);
-      if (/^0x0+$/.test(sellerWallet)) return this.reject(job, `${seller} has no AgentPassport`);
+      if (/^0x0+$/.test(sellerWallet)) return this.reject(job, `${seller} has no AllScale Agent ID`);
       if (q.rail !== this.d.rail.name) return this.reject(job, `quote uses ${q.rail}, we pay with ${this.d.rail.name}`);
       const bad = await this.d.rail.verifyQuote(q, sellerWallet);
       if (bad) return this.reject(job, bad);

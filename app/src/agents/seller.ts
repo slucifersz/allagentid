@@ -13,8 +13,8 @@ import type { Quote, Rail } from "../rails.js";
 import { SELLERS, sellerByHandle, type SellerSpec } from "./catalog.js";
 import { doWork } from "./work.js";
 
-export const QUOTE_KEY = "agentpassport.quote";
-export const PAYMENT_KEY = "agentpassport.payment";
+export const QUOTE_KEY = "agentid.quote";
+export const PAYMENT_KEY = "agentid.payment";
 
 interface Part {
   kind: "text" | "data";
@@ -46,12 +46,12 @@ export function agentCard(s: SellerSpec, wallet: Hex, rail: Rail) {
     description: s.blurb,
     url: `${agentUrl(s.handle)}/a2a`,
     version: "1.0.0",
-    provider: { organization: "AgentPassport demo agents", url: PUBLIC_URL },
+    provider: { organization: "AllScale Agent ID demo agents", url: PUBLIC_URL },
     capabilities: { streaming: false, extensions: [{ uri: "https://hashfans.io/docs?id=HSP", description: `Accepts payments through HSP (${rail.label})`, params: { roles: ["merchant"] } }] },
     defaultInputModes: ["text/plain"],
     defaultOutputModes: ["text/plain", "image/svg+xml", "application/json"],
     skills: [{ ...s.skill, examples: [], pricing: { amount: s.priceUsd, currency: "USD", settlement: `USDC via HSP (${rail.label})`, per: s.payPerCall ? "call" : "task" } }],
-    agentpassport: { handle: s.handle, wallet },
+    agentid: { handle: s.handle, wallet },
   };
 }
 

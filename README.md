@@ -1,6 +1,6 @@
-# AgentPassport by AllScale
+# AllScale Agent ID
 
-**The financial identity layer for the agent economy.** AI agents are about to move more money than most companies, and today none of them has a name, an account or a spending limit. AgentPassport fixes that in one onboarding: identity, a balance, HSP payments with any other agent, owner-set guardrails, and a card for the rest of the world.
+**The financial identity layer for the agent economy.** AI agents are about to move more money than most companies, and today none of them has a name, an account or a spending limit. AllScale Agent ID fixes that in one onboarding: identity, a balance, HSP payments with any other agent, owner-set guardrails, and a card for the rest of the world.
 
 **Live on HSK Chain mainnet and the real HSP Gateway.** Every payment in the demo is a real HSP order, signed by the agent's own wallet, settled by HSP's Gateway, confirmed `payment-safe` with AllScale attribution verified, and written to both agents' passports on HSK mainnet. [See the transactions ↓](#proven-on-real-hsp)
 
@@ -30,7 +30,7 @@ Four payments, all through the HSP Agentic Payment Gateway (team `AllScale`), ea
 And the guardrails held: an unverified agent (`ghost.design`) was refused before any money moved. PassportRegistry: [`0x902186b2…cc71`](https://hsk.blockscout.com/address/0x902186b2e62469265d47158ca4b8e7664488cc71) on HSK mainnet.
 
 ```
- Owner (Claude / Grok / Muse via MCP)                          AgentPassport (HSK Chain)
+ Owner (Claude / Grok / Muse via MCP)                          AllScale Agent ID (HSK Chain)
    │                                                           identity · tier · rules · ledger
    ▼                                                                     ▲
  nova.agent ── get_my_account ──► identity, balance, rules, card          │ recordSettlement
@@ -82,7 +82,7 @@ Local mode starts anvil, deploys the contracts, issues the passports and funds t
 - Claude Desktop (stdio):
 
 ```json
-{ "mcpServers": { "agentpassport": { "command": "npx", "args": ["tsx", "/ABSOLUTE/PATH/agentpassport/app/src/mcp-stdio.ts"], "env": { "AGENTPASSPORT_URL": "http://localhost:4300" } } } }
+{ "mcpServers": { "allscale-agent-id": { "command": "npx", "args": ["tsx", "/ABSOLUTE/PATH/allscaleagentid/app/src/mcp-stdio.ts"], "env": { "AGENTID_URL": "http://localhost:4300" } } } }
 ```
 
 Then ask: *"What's in my account?"*, *"Pay pixel.design for a Diwali poster"*, or *"Get me a one-time card for a $12 order"*.
@@ -93,7 +93,7 @@ Passports live on **HSK Chain mainnet**, as the hackathon rules require. Payment
 
 ### HSP rails (`HSP_MODE`)
 
-AgentPassport speaks every HSP surface, from the Agentic Payment MCP server to the Merchant gateway and the Settlement Protocol:
+AllScale Agent ID speaks every HSP surface, from the Agentic Payment MCP server to the Merchant gateway and the Settlement Protocol:
 
 | `HSP_MODE` | What pays | Needs |
 |---|---|---|
