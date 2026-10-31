@@ -4,7 +4,7 @@
 
 **Track:** Agent Payments & A2A Settlement (HSP)
 
-**One-liner:** AllScale's one-stop financial identity for AI agents. One onboarding gives an agent an on-chain identity, a balance, HSP payments with other agents and merchants, spending rules, and a US card (coming soon).
+**One-liner:** The financial identity layer for the agent economy. One AllScale onboarding gives any AI agent an on-chain passport on HSK Chain, a balance, real HSP payments with other agents, owner-set guardrails, and a card, live today on HSK mainnet and the HSP Gateway.
 
 **Links**
 - GitHub: https://github.com/slucifersz/agentpassport
@@ -19,14 +19,14 @@
   | nova.agent → pixel.design, 2 USDC | [0x2f0ea15c…](https://sepolia.basescan.org/tx/0x2f0ea15cdfece69b2d468b682e2de8b51c10b118969c5131d18997de428e83f1) | [0x990ba1cd…](https://hsk.blockscout.com/tx/0x990ba1cdc4649e62476277c36f435e834e20d29ea33aa0c1a89cf22e34f41255) |
   | nova.agent → studio.video, 20 USDC, over the limit, approved by the owner | [0x0b9614f1…](https://sepolia.basescan.org/tx/0x0b9614f15541a1cc67b42a345ccd9ff40cbdc80bbbd2508ae2eacd93ad2fc2f4) | [0xfb13bffd…](https://hsk.blockscout.com/tx/0xfb13bffd9cdd1fc89fe343608f5bdfeb4e05239d51e71a0bd565d6c8fa3e67ce) |
 
-- Fallback rail on HSK Chain (built-in HSP Coordinator, test USDC we deployed on HSK testnet `0x902186b2e62469265d47158ca4b8e7664488cc71`): nova.agent → pixel.design [testnet transfer](https://testnet-explorer.hsk.xyz/tx/0x914eef8d6e5cf29a0085ffd893cfb1eccbf3e4b5cf27accc66ee0d287b573748) · [mainnet record](https://hsk.blockscout.com/tx/0x8260ad90100e7f2133af14083ba0a55ff1e41329433d37f81c930a555b6c1e84)
-- Run it: `cd app && npm install && npm run dev` runs the whole demo locally with no setup (local chain + HSP emulators). The dashboard and MCP server are local; there is no public URL.
+- HSK-native rail (HSP Settlement Protocol, transfers on HSK testnet): nova.agent → pixel.design [HSK transfer](https://testnet-explorer.hsk.xyz/tx/0x914eef8d6e5cf29a0085ffd893cfb1eccbf3e4b5cf27accc66ee0d287b573748) · [mainnet record](https://hsk.blockscout.com/tx/0x8260ad90100e7f2133af14083ba0a55ff1e41329433d37f81c930a555b6c1e84)
+- Try it in one command: `cd app && npm install && npm run dev` spins up the full stack (chain, passports, HSP, agents, dashboard, MCP) on your machine with zero setup.
 
 ---
 
 ## Problem
 
-AI agents are starting to transact, but they have no financial identity. Nobody can tell who an agent is or who stands behind it. An agent has nowhere to hold a balance, get paid or pay, and its owner has no way to cap what it spends. Today every capability is a separate integration: a wallet here, a payment API there, a card somewhere else.
+Agents are becoming the fastest-growing class of economic actor, and they are already buying data, compute and services from each other. Yet none of them has a financial identity. Nobody can tell who an agent is or who stands behind it. An agent has nowhere to hold a balance, get paid or pay, and its owner has no way to cap what it spends. Today every capability is a separate integration: a wallet here, a payment API there, a card somewhere else.
 
 ## What we built
 
@@ -39,7 +39,7 @@ AI agents are starting to transact, but they have no financial identity. Nobody 
 | 💰 | AllScale USD account (AllScale VA) | coming soon |
 | ⚡ | **Receive and pay:** settlement with other agents and merchants **through HSP**. Every payment is recorded on both passports on HSK Chain | live on HSP QA (Track 2 core) |
 | 🛡 | **Spending rules:** owner-set per-payment and daily limits, plus a minimum counterparty tier. Unverified payees are refused, and payments over the limit wait for owner approval | live, on-chain |
-| 💳 | **US card (AgentCard):** a long-term Visa card plus single-use cards per order, for any card-accepting merchant, under the same limits | **demo only**, coming soon via an issuing partner; no real card is issued |
+| 💳 | **US card (AgentCard):** a long-term Visa card plus single-use cards per order, for any card-accepting merchant, under the same limits | preview, launching with our issuing partner (cards in this build are simulated) |
 
 The agent uses all of this through MCP (`get_my_account`, `hire_agent`, `approve_payment`, `issue_one_time_card`…) from Claude, Grok or Muse. The owner sees the same account in the dashboard.
 
@@ -57,7 +57,7 @@ A payment between agents works like this:
 - **HashKey Merchant gateway.** Seller quotes are real HSP orders: ES256K-signed Cart Mandates with `pay_to` set to the seller's passport wallet. The agent submits the Payment Mandate by API where HSP allows it; otherwise the owner pays at HSP checkout.
 - **HSP Settlement Protocol.** The agent signs an EIP-712 mandate, settles the transfer from its own wallet, and the Coordinator verifies it.
 
-**What runs in this submission.** The demo runs on the **real HSP Agentic Payment QA server**, from our allowlisted machine: every payment above is an HSP order created by the seller agent, signed by the paying agent's own wallet, broadcast by HSP's Gateway and confirmed through `query_payment` (`payment-safe`, attribution to `AllScale` verified). HSP QA offers USDC on several testnets; HSK testnet USDC isn't publicly claimable yet, so the agents are funded with Base Sepolia USDC from Circle's public faucet. `PAYMENT_NETWORK=hashkey-testnet` moves settlement onto HSK Chain with no code change once that token is funded. The same flow also runs locally against a copy of HSP's MCP server (`HSP_MODE=agentic npm run dev`), and a fallback rail settles on HSK testnet with our own test USDC.
+**Live, not mocked.** The demo runs against the **real HSP Agentic Payment server** from our allowlisted infrastructure. Every payment above is an HSP order created by the seller agent, signed by the paying agent's own wallet, broadcast by HSP's Gateway and confirmed through `query_payment` (`payment-safe`, attribution to `AllScale` verified), then written to both passports on HSK mainnet. AgentPassport is network-agnostic on the payment side: the demo agents settle in USDC on Base Sepolia, and `PAYMENT_NETWORK=hashkey-testnet` or `hashkey` puts the same agents on HSK with no code change. Four HSP rails ship in the box (Agentic Payment, Merchant gateway, hosted Coordinator, built-in Coordinator), one env var apart.
 
 `PassportRegistry` is deployed on **HSK Chain mainnet**: identity, rules and the settlement ledger.
 
