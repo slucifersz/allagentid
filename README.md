@@ -1,13 +1,13 @@
-# AllScale Agent ID
+# All Agent ID
 
-**The financial identity layer for the agent economy.** AI agents are about to move more money than most companies, and today none of them has a name, an account or a spending limit. AllScale Agent ID fixes that in one onboarding: identity, a balance, HSP payments with any other agent, owner-set guardrails, and a card for the rest of the world.
+**The financial identity layer for the agent economy.** AI agents are about to move more money than most companies, and today none of them has a name, an account or a spending limit. All Agent ID fixes that in one onboarding: identity, a balance, HSP payments with any other agent, owner-set guardrails, and a card for the rest of the world.
 
-**Live on HSK Chain mainnet and the real HSP Gateway.** Every payment in the demo is a real HSP order, signed by the agent's own wallet, settled by HSP's Gateway, confirmed `payment-safe` with AllScale attribution verified, and written to both agents' passports on HSK mainnet. [See the transactions ↓](#proven-on-real-hsp)
+**Live on HSK Chain mainnet and the real HSP Gateway.** Every payment in the demo is a real HSP order, signed by the agent's own wallet, settled by HSP's Gateway, confirmed `payment-safe` with merchant attribution verified, and written to both agents' passports on HSK mainnet. [See the transactions ↓](#proven-on-real-hsp)
 
 | | What the agent gets | Status |
 |---|---|---|
-| 🪪 **Identity** | An on-chain passport on HSK Chain mainnet: unique handle, verification tier attested by AllScale (unverified / owner KYC / verified human), accountable owner | ✅ live on mainnet |
-| 💰 **Account & balance** | A stablecoin balance the agent reads and spends on its own; AllScale USD accounts (VA) plug in next | ✅ live · AllScale VA next |
+| 🪪 **Identity** | An on-chain passport on HSK Chain mainnet: unique handle, verification tier attested by All Agent ID (unverified / owner KYC / verified human), accountable owner | ✅ live on mainnet |
+| 💰 **Account & balance** | A stablecoin balance the agent reads and spends on its own; USD accounts plug in next | ✅ live · USD accounts next |
 | ⚡ **Receive & pay** | Agent-to-agent settlement **through HSP**, on any network HSP serves, recorded on HSK Chain | ✅ live on HSP (Track 2 core) |
 | 🛡 **Spending rules** | Per-payment and daily limits, minimum counterparty tier, owner approval above the limit, enforced on-chain before every payment | ✅ live on mainnet |
 | 💳 **AgentCard** | A Visa card plus single-use numbers per order, usable at any card-accepting merchant, under the same limits | 🎬 preview, launching with our issuing partner |
@@ -16,7 +16,7 @@ Built for the **HSK Chain Horizon Hackathon · Track 2: Agent Payments & A2A Set
 
 ## Proven on real HSP
 
-Four payments, all through the HSP Agentic Payment Gateway (team `AllScale`), each recorded on both passports on HSK Chain mainnet:
+Four payments, all through the HSP Agentic Payment Gateway, each recorded on both passports on HSK Chain mainnet:
 
 | Payment | HSP Gateway transfer | Passport record (HSK mainnet) |
 |---|---|---|
@@ -30,7 +30,7 @@ Four payments, all through the HSP Agentic Payment Gateway (team `AllScale`), ea
 And the guardrails held: an unverified agent (`ghost.design`) was refused before any money moved. PassportRegistry: [`0x902186b2…cc71`](https://hsk.blockscout.com/address/0x902186b2e62469265d47158ca4b8e7664488cc71) on HSK mainnet.
 
 ```
- Owner (Claude / Grok / Muse via MCP)                          AllScale Agent ID (HSK Chain)
+ Owner (Claude / Grok / Muse via MCP)                          All Agent ID (HSK Chain)
    │                                                           identity · tier · rules · ledger
    ▼                                                                     ▲
  nova.agent ── get_my_account ──► identity, balance, rules, card          │ recordSettlement
@@ -46,13 +46,13 @@ And the guardrails held: an unverified agent (`ghost.design`) was refused before
 
 | Path | What it is |
 |---|---|
-| `contracts/src/PassportRegistry.sol` | Passports: handle, owner, tier (attested by AllScale), spending policy, `checkPayment`, settlement ledger keyed by HSP paymentId. 6 Foundry tests. |
+| `contracts/src/PassportRegistry.sol` | Passports: handle, owner, tier (attested by the issuer), spending policy, `checkPayment`, settlement ledger keyed by HSP paymentId. 6 Foundry tests. |
 | `contracts/src/MockUSDC.sol` | Test stablecoin (EIP-3009): the local chain, and the HSK testnet fallback. Never deployed to mainnet |
 | `app/src/hsp/wire.ts` | HSP wire v1: the 11-field EIP-712 Mandate, `eip712-eoa.v1` signer profile, capability hashing |
 | `app/src/hsp/coordinator.ts` | HSP Coordinator client: `/chains`, `POST /payments`, `/observe`, `GET /payments/:id`, explain links |
 | `app/src/hsp/emulator.ts` | Local Coordinator emulator: verifies the mandate signature, observes the Transfer log, runs the capability check, signs a receipt |
 | `app/src/agents/seller.ts` | Seller agents over A2A (`/.well-known/agent-card.json`, JSON-RPC `message/send`) with signed payment requirements |
-| `app/src/agents/payer.ts` | The AllScale pay agent: verify → passport/policy check → HSP mandate → transfer → observe → record → collect |
+| `app/src/agents/payer.ts` | The pay agent: verify → passport/policy check → HSP mandate → transfer → observe → record → collect |
 | `app/src/mcp.ts` | MCP tools: `get_my_account`, `issue_one_time_card` (demo), `find_agents`, `get_passport`, `issue_passport`, `set_spending_policy`, `hire_agent` (pay), `approve_payment`, `recent_activity` |
 | `app/src/cards.ts` | AgentCard **simulation**: long-term and single-use cards under the passport's limits; no card rails touched |
 | `app/public/index.html` | Dashboard: the agent's account (identity, balance, rules, card), receive / pay, payments with HSP records, live activity |
@@ -72,7 +72,7 @@ Open http://localhost:4300 and click **Run the demo**:
 3. **Receive:** `@atlas.client` pays Nova **3 USDC through HSP** for a market brief.
 4. **Pay:** Nova pays `@pixel.design` **2 USDC through HSP**. It refuses `@ghost.design` (unverified). It holds `@studio.video`'s 20 USDC (over limit) for the owner's approval.
 5. **Card (demo):** a one-time Visa card for a $4.50 merchant order, issued within the same limits. A $40 card is refused.
-6. *"One AllScale onboarding: identity, an account, payments and a card."*
+6. *"One onboarding: identity, an account, payments and a card."*
 
 Local mode starts anvil, deploys the contracts, issues the passports and funds the agents. It runs an HSP emulator for whichever rail `HSP_MODE` selects. Try `HSP_MODE=agentic npm run dev` for the HSP Agentic Payment flow against a local copy of HSP's MCP server, or `HSP_MODE=merchant npm run dev` for the HashKey Merchant rail: add `HSP_PAY_MANDATE_URL=on` and the agent pays by API; without it, you pay at the local HSP checkout.
 
@@ -82,7 +82,7 @@ Local mode starts anvil, deploys the contracts, issues the passports and funds t
 - Claude Desktop (stdio):
 
 ```json
-{ "mcpServers": { "allscale-agent-id": { "command": "npx", "args": ["tsx", "/ABSOLUTE/PATH/allscaleagentid/app/src/mcp-stdio.ts"], "env": { "AGENTID_URL": "http://localhost:4300" } } } }
+{ "mcpServers": { "all-agent-id": { "command": "npx", "args": ["tsx", "/ABSOLUTE/PATH/allagentid/app/src/mcp-stdio.ts"], "env": { "AGENTID_URL": "http://localhost:4300" } } } }
 ```
 
 Then ask: *"What's in my account?"*, *"Pay pixel.design for a Diwali poster"*, or *"Get me a one-time card for a $12 order"*.
@@ -93,11 +93,11 @@ Passports live on **HSK Chain mainnet**, as the hackathon rules require. Payment
 
 ### HSP rails (`HSP_MODE`)
 
-AllScale Agent ID speaks every HSP surface, from the Agentic Payment MCP server to the Merchant gateway and the Settlement Protocol:
+All Agent ID speaks every HSP surface, from the Agentic Payment MCP server to the Merchant gateway and the Settlement Protocol:
 
 | `HSP_MODE` | What pays | Needs |
 |---|---|---|
-| `agentic` | **HSP Agentic Payment** (the hackathon's HSP QA MCP server, `mcp-qa.hashkeymerchant.com`). The seller agent opens an HSP order with `create_order` (`pay_to` = its passport wallet, `merchant_name` = `AllScale`). The pay agent checks both passports and its rules, calls `prepare_payment`, checks the EIP-712 data and its balance, signs with its own wallet, then `finalize_payment` → `submit_payment`. HSP's Gateway broadcasts; the agent polls `query_payment` until `payment-safe` / `payment-finalized` with `attribution_verified`. | Our egress IP on HSP's QA allowlist; payer wallets funded with the token `get_chain_config` names |
+| `agentic` | **HSP Agentic Payment** (the hackathon's HSP QA MCP server, `mcp-qa.hashkeymerchant.com`). The seller agent opens an HSP order with `create_order` (`pay_to` = its passport wallet, `merchant_name` from `HSP_MERCHANT_NAME`). The pay agent checks both passports and its rules, calls `prepare_payment`, checks the EIP-712 data and its balance, signs with its own wallet, then `finalize_payment` → `submit_payment`. HSP's Gateway broadcasts; the agent polls `query_payment` until `payment-safe` / `payment-finalized` with `attribution_verified`. | Our egress IP on HSP's QA allowlist; payer wallets funded with the token `get_chain_config` names |
 | `merchant` | **HashKey Merchant gateway** (https://hashkey-merchant.github.io). Each seller quote is a real HSP order: a Cart Mandate signed ES256K with the key in `keys/`, with `pay_to` set to the seller's passport wallet. The buyer verifies it. If `HSP_PAY_MANDATE_URL` is set, the agent signs an x402 / EIP-3009 Payment Mandate and submits it by API. Otherwise the owner pays at HSP's hosted checkout, and the job finishes once HSP reports the payment settled. | `HSP_APP_KEY`, `HSP_APP_SECRET` from the merchant console (QA host for testnet) |
 | `coordinator` | **HSP Settlement Protocol** on a hosted Coordinator: signed EIP-712 mandate → transfer from the agent's own wallet → observe → `SETTLED` | `HSP_COORDINATOR_URL`, `HSP_API_KEY` |
 | `builtin` | The same Settlement Protocol flow against the built-in Coordinator, observing **real** USDC transfers on HSK Chain | nothing; this is the fallback |
@@ -145,6 +145,6 @@ The mandate encoding follows the HSP wire v1 field set used by the reference SDK
 
 ## Security notes
 
-- Agent wallets are custodial (held by the AllScale server) for the demo. Keys live in `app/data/state.json` (git-ignored).
+- Agent wallets are custodial (held by the server) for the demo. Keys live in `app/data/state.json` (git-ignored).
 - The policy is enforced by the pay agent before it signs. The contract is the source of truth it reads and the audit log it writes. Hard on-chain enforcement through a smart-account spending module is on the roadmap.
 - Sellers never trust the buyer's word. They fetch the payment from HSP, recompute the mandate hash, check the recipient and amount, and find the Transfer on-chain before delivering.

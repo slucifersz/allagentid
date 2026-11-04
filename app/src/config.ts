@@ -72,14 +72,14 @@ export const merchant = {
   /** Set only once HSP confirms agents may submit Payment Mandates by API; otherwise the owner pays at checkout. */
   payMandateUrl: process.env.HSP_PAY_MANDATE_URL ?? "",
   keyPath: path.resolve(ROOT, process.env.MERCHANT_PRIVATE_KEY_PATH || "../keys/merchant_private_key.pem"),
-  name: process.env.MERCHANT_NAME || "AllScale",
+  name: process.env.MERCHANT_NAME || "AllAgentID",
 };
 
 /** HSP Agentic Payment: the hackathon's HSP QA MCP server (our egress IP must be allowlisted). */
 export const agentic = {
   url: process.env.HSP_MCP_URL || "https://mcp-qa.hashkeymerchant.com/",
   /** Team attribution label for HSP's post-event aggregation: keep it identical everywhere. */
-  merchantName: process.env.HSP_MERCHANT_NAME || "AllScale",
+  merchantName: process.env.HSP_MERCHANT_NAME || "AllAgentID",
   /** Token symbol to pay in, from get_chain_config on PAYMENT_NETWORK */
   token: process.env.HSP_TOKEN || "USDC",
   /** The guide asks for one query every 15 s */

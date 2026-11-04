@@ -2,10 +2,10 @@
 
 The Track 2 text says: "The interface API for HSP is this: https://hashkey-merchant.github.io/#/", which is the **HashKey Merchant** gateway. The HSP **Settlement Protocol** sandbox guide (https://hashfans.io/docs?id=HSP, added June 2026) belongs to an earlier edition. Its Coordinator domain `hsp-hackathon.hashkeymerchant.com` no longer resolves, while `merchant-qa.hashkeymerchant.com` does.
 
-AllScale Agent ID supports both, switched by `HSP_MODE` (see the README).
+All Agent ID supports both, switched by `HSP_MODE` (see the README).
 
 ## Asked in the support group (https://t.me/+M5yaRB-u4PRiNWM1)
-1. Who do we send HashKey Merchant onboarding to? Description: "AllScale Agent ID – AllScale's one-stop financial identity for AI agents (identity, balance, payments), settling via HSP (hackathon project)". The ES256K public key is `keys/merchant_public_key.pem`. We also asked about a fast track.
+1. Who do we send HashKey Merchant onboarding to? Description: "All Agent ID – the one-stop financial identity for AI agents (identity, balance, payments), settling via HSP (hackathon project)". The ES256K public key is `keys/merchant_public_key.pem`. We also asked about a fast track.
 2. May an AI agent submit the signed Payment Mandate by API, without the hosted checkout? If so, what is the endpoint and format? (The architecture diagram shows `POST /api/v1/payment/pay-mandate`.)
 3. Is there a Mumbai HSP sandbox Coordinator (URL, API key, faucet, SDK repo)?
 

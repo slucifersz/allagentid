@@ -1,7 +1,7 @@
 # Pitch deck outline (6 slides, about 4 minutes on Demo Day)
 
 1. **Agents are starting to transact, but they have no financial identity.** Nobody knows who an agent is. It has nowhere to hold money, get paid or pay. Its owner can't cap its spend. Every capability is a separate integration.
-2. **AllScale Agent ID: one onboarding, five capabilities.**
+2. **All Agent ID: one onboarding, five capabilities.**
    - Identity: an on-chain passport
    - Account and balance
    - Receive and pay through HSP
@@ -13,9 +13,9 @@
    - Verifiable stablecoin settlement that anyone can re-check
    - A compliant chain for agent identity
    - HSP's KYC and sanctions capabilities map onto passport tiers
-6. **One AllScale balance, spendable everywhere.**
+6. **One balance, spendable everywhere.**
    - On-chain through HSP; off-chain through AgentCard (coming soon via an issuing partner)
-   - Funded from AllScale USD accounts
+   - Funded from USD accounts
    - Next: issuing partner, smart-account limits, compliant HSP payments
 
 Compliance wording: never say the card or the USD account is live. Say "coming soon" or "via an issuing partner".

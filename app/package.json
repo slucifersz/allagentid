@@ -1,7 +1,7 @@
 {
-  "name": "allscaleagentid",
+  "name": "allagentid",
   "version": "0.1.0",
-  "description": "AllScale Agent ID: on-chain passports for AI agents, A2A settlement through HSP on HSK Chain",
+  "description": "All Agent ID: on-chain passports for AI agents, A2A settlement through HSP on HSK Chain",
   "type": "module",
   "private": true,
   "scripts": {

@@ -46,7 +46,7 @@ export function agentCard(s: SellerSpec, wallet: Hex, rail: Rail) {
     description: s.blurb,
     url: `${agentUrl(s.handle)}/a2a`,
     version: "1.0.0",
-    provider: { organization: "AllScale Agent ID demo agents", url: PUBLIC_URL },
+    provider: { organization: "All Agent ID demo agents", url: PUBLIC_URL },
     capabilities: { streaming: false, extensions: [{ uri: "https://hashfans.io/docs?id=HSP", description: `Accepts payments through HSP (${rail.label})`, params: { roles: ["merchant"] } }] },
     defaultInputModes: ["text/plain"],
     defaultOutputModes: ["text/plain", "image/svg+xml", "application/json"],

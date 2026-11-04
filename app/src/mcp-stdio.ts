@@ -1,4 +1,4 @@
-// stdio entry for Claude Desktop. Needs the AllScale Agent ID server running.
+// stdio entry for Claude Desktop. Needs the All Agent ID server running.
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { buildMcpServer } from "./mcp.js";
 

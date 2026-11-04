@@ -1,4 +1,4 @@
-// The AllScale pay agent: hires another agent over A2A, checks the quote and both passports
+// The pay agent: hires another agent over A2A, checks the quote and both passports
 // against the owner's policy, pays through the active HSP rail, records the settlement on the
 // PassportRegistry and collects the work. When the rail can't take an agent payment by API
 // (HashKey Merchant without pay-by-API), the owner pays at HSP's hosted checkout instead.
@@ -85,7 +85,7 @@ export class PayAgent {
 
       // 2. Is the quote authentic and payable, and does it pay the seller's passport wallet?
       const sellerWallet = await this.d.registry.resolve(seller);
-      if (/^0x0+$/.test(sellerWallet)) return this.reject(job, `${seller} has no AllScale Agent ID`);
+      if (/^0x0+$/.test(sellerWallet)) return this.reject(job, `${seller} has no All Agent ID`);
       if (q.rail !== this.d.rail.name) return this.reject(job, `quote uses ${q.rail}, we pay with ${this.d.rail.name}`);
       const bad = await this.d.rail.verifyQuote(q, sellerWallet);
       if (bad) return this.reject(job, bad);

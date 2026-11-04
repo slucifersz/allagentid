@@ -1,5 +1,5 @@
 // Small JSON file store for agent keys and local deployment addresses. Agent wallets are
-// custodial (held by AllScale), which is how the AllScale agent wallet works today.
+// custodial (held by the server) for the demo.
 import fs from "node:fs";
 import path from "node:path";
 import { generatePrivateKey } from "viem/accounts";

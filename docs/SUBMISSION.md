@@ -1,16 +1,16 @@
 # DoraHacks BUIDL submission (copy-paste)
 
-**Name:** AllScale Agent ID
+**Name:** All Agent ID
 
 **Track:** Agent Payments & A2A Settlement (HSP)
 
-**One-liner:** The financial identity layer for the agent economy. One AllScale onboarding gives any AI agent an on-chain passport on HSK Chain, a balance, real HSP payments with other agents, owner-set guardrails, and a card, live today on HSK mainnet and the HSP Gateway.
+**One-liner:** The financial identity layer for the agent economy. One onboarding gives any AI agent an on-chain passport on HSK Chain, a balance, real HSP payments with other agents, owner-set guardrails, and a card, live today on HSK mainnet and the HSP Gateway.
 
 **Links**
-- GitHub: https://github.com/slucifersz/allscaleagentid
+- GitHub: https://github.com/slucifersz/allagentid
 - Demo video: `<YouTube / Loom URL>`
 - PassportRegistry on HSK Chain mainnet: `0x902186b2e62469265d47158ca4b8e7664488cc71`, https://hsk.blockscout.com/address/0x902186b2e62469265d47158ca4b8e7664488cc71
-- Real HSP Agentic Payments (HSP QA Gateway, team `AllScale`, USDC on Base Sepolia; each one also recorded on both passports on HSK mainnet):
+- Real HSP Agentic Payments (HSP QA Gateway, USDC on Base Sepolia; each one also recorded on both passports on HSK mainnet):
 
   | Payment | HSP Gateway transfer (Base Sepolia) | Recorded on passports (HSK mainnet) |
   |---|---|---|
@@ -30,13 +30,13 @@ Agents are becoming the fastest-growing class of economic actor, and they are al
 
 ## What we built
 
-**AllScale Agent ID** is a single onboarding that gives an agent everything it needs to transact. Status of each part:
+**All Agent ID** is a single onboarding that gives an agent everything it needs to transact. Status of each part:
 
 | | Capability | Status |
 |---|---|---|
-| 🪪 | **Identity:** an on-chain passport on HSK Chain with a unique handle, a verification tier attested by AllScale (unverified / owner KYC / verified human) and its owner | live |
+| 🪪 | **Identity:** an on-chain passport on HSK Chain with a unique handle, a verification tier attested by All Agent ID (unverified / owner KYC / verified human) and its owner | live |
 | 💰 | **Account and balance:** a stablecoin balance the agent can read and spend | live |
-| 💰 | AllScale USD account (AllScale VA) | coming soon |
+| 💰 | USD account | coming soon |
 | ⚡ | **Receive and pay:** settlement with other agents and merchants **through HSP**. Every payment is recorded on both passports on HSK Chain | live on HSP QA (Track 2 core) |
 | 🛡 | **Spending rules:** owner-set per-payment and daily limits, plus a minimum counterparty tier. Unverified payees are refused, and payments over the limit wait for owner approval | live, on-chain |
 | 💳 | **US card (AgentCard):** a long-term Visa card plus single-use cards per order, for any card-accepting merchant, under the same limits | preview, launching with our issuing partner (cards in this build are simulated) |
@@ -53,11 +53,11 @@ A payment between agents works like this:
 5. The settlement is written to both passports. The receiver independently checks the payment with HSP and on-chain before it delivers.
 
 **HSP integrations, switched by config:**
-- **HSP Agentic Payment (HSP QA MCP).** The seller agent opens an HSP order (`create_order`, `pay_to` = its passport wallet, team `AllScale`). After the on-chain passport and rule checks, the pay agent runs `prepare_payment` → signs the EIP-712 authorization with its own wallet → `finalize_payment` → `submit_payment`, and polls `query_payment` to `payment-safe` / `payment-finalized` with team attribution verified. HSP's Gateway broadcasts the transfer; the receiver re-checks it with HSP and on-chain before it delivers.
+- **HSP Agentic Payment (HSP QA MCP).** The seller agent opens an HSP order (`create_order`, `pay_to` = its passport wallet). After the on-chain passport and rule checks, the pay agent runs `prepare_payment` → signs the EIP-712 authorization with its own wallet → `finalize_payment` → `submit_payment`, and polls `query_payment` to `payment-safe` / `payment-finalized` with team attribution verified. HSP's Gateway broadcasts the transfer; the receiver re-checks it with HSP and on-chain before it delivers.
 - **HashKey Merchant gateway.** Seller quotes are real HSP orders: ES256K-signed Cart Mandates with `pay_to` set to the seller's passport wallet. The agent submits the Payment Mandate by API where HSP allows it; otherwise the owner pays at HSP checkout.
 - **HSP Settlement Protocol.** The agent signs an EIP-712 mandate, settles the transfer from its own wallet, and the Coordinator verifies it.
 
-**Live, not mocked.** The demo runs against the **real HSP Agentic Payment server** from our allowlisted infrastructure. Every payment above is an HSP order created by the seller agent, signed by the paying agent's own wallet, broadcast by HSP's Gateway and confirmed through `query_payment` (`payment-safe`, attribution to `AllScale` verified), then written to both agents' records on HSK mainnet.
+**Live, not mocked.** The demo runs against the **real HSP Agentic Payment server** from our allowlisted infrastructure. Every payment above is an HSP order created by the seller agent, signed by the paying agent's own wallet, broadcast by HSP's Gateway and confirmed through `query_payment` (`payment-safe`, merchant attribution verified), then written to both agents' records on HSK mainnet.
 
 **Multichain by design.** HSP settles on several networks. These payments ran on Base Sepolia; the same agents pay on HSK Chain by switching one config value (`PAYMENT_NETWORK=hashkey-testnet` or `hashkey`), no code change. Identity, rules and the settlement ledger always live on HSK mainnet.
 
@@ -70,15 +70,15 @@ A payment between agents works like this:
 3. Nova **pays a verified designer 2 USDC through HSP**. It **refuses** an unverified agent, and **holds** a 20 USDC payment over its limit until the owner approves.
 4. Nova gets a **one-time card** for a $4.50 merchant order, within the same limits. This step is a demo.
 
-*One AllScale onboarding: identity, an account, payments and a card.*
+*One onboarding: identity, an account, payments and a card.*
 
 ## What's next
 
-- AllScale USD accounts (VA) funding agent balances; one balance spendable on-chain (HSP) and off-chain (card)
+- USD accounts funding agent balances; one balance spendable on-chain (HSP) and off-chain (card)
 - AgentCard through an issuing partner
 - Smart-account spending modules, so limits are enforced in the wallet itself
 - HSP compliant payments: passport tiers backing `attests:kyc` / `attests:sanctions`
 
 ## Team
 
-AllScale: `<names / roles>`
+Team: `<names / roles>`

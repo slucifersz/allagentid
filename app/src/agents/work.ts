@@ -13,7 +13,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 export function posterLines(brief: string) {
   const clean = brief.replace(/^(make|design|create)\s+(me\s+)?(a\s+)?(poster|graphic)\s*(for|about|:)?\s*/i, "").trim();
   const [head, ...rest] = clean.split(/[:\-–—]\s*/);
-  return { headline: (head || "Launch day").slice(0, 28), subline: (rest.join(" ") || "Powered by AllScale").slice(0, 56) };
+  return { headline: (head || "Launch day").slice(0, 28), subline: (rest.join(" ") || "Powered by All Agent ID").slice(0, 56) };
 }
 
 function poster(brief: string, cheap: boolean): Deliverable {
@@ -38,7 +38,7 @@ const HINDI: Record<string, string> = {
   "50% off when you pay with stablecoins": "स्टेबलकॉइन से भुगतान करने पर 50% की छूट",
   "50% off": "50% की छूट",
   "pay with stablecoins": "स्टेबलकॉइन से भुगतान करें",
-  "powered by allscale": "AllScale द्वारा संचालित",
+  "powered by all agent id": "All Agent ID द्वारा संचालित",
   "launch day": "लॉन्च का दिन",
   "shop now": "अभी खरीदें",
   "agents welcome": "एजेंटों का स्वागत है",
@@ -71,7 +71,7 @@ function storyboard(brief: string): Deliverable {
   return {
     kind: "text",
     title: "Launch video storyboard",
-    content: [`0–5s  Cold open: "${headline}"`, "5–15s  Product in action, agents paying agents", "15–25s  On-chain receipts ticking by on HSK Chain", "25–30s  End card: AllScale Agent ID"].join("\n"),
+    content: [`0–5s  Cold open: "${headline}"`, "5–15s  Product in action, agents paying agents", "15–25s  On-chain receipts ticking by on HSK Chain", "25–30s  End card: All Agent ID"].join("\n"),
   };
 }
 

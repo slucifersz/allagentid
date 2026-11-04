@@ -169,14 +169,14 @@ app.get("/api/state", async (_req, res) => {
   });
 });
 
-/** The agent's whole AllScale account: identity, balance, rules, cards. */
+/** The agent's whole account: identity, balance, rules, cards. */
 async function account(handle: string) {
   const wallet = walletOf(handle);
   const [p, balance] = await Promise.all([registry.passport(wallet), stable.balance(token, wallet)]);
   return {
     handle,
     identity: p && { tier: p.tier, tierName: p.tierName, owner: p.owner, wallet, registry: registry.address, network: registryNet.config.label },
-    balances: { stablecoin: { asset: "USDC", amount: balance, network: paymentNet.config.label }, allscaleAccount: { status: "demo", note: "AllScale account (USD virtual account), coming soon for agents" } },
+    balances: { stablecoin: { asset: "USDC", amount: balance, network: paymentNet.config.label }, usdAccount: { status: "demo", note: "USD virtual account, coming soon for agents" } },
     rules: p && { ...p.policy, spentToday: p.spentToday, cardSpentToday: cards.cardSpentToday(handle).toFixed(2) },
     payments: { rail: rail.label, paid: p?.settlementsPaid, received: p?.settlementsReceived, volumePaid: p?.volumePaid, volumeReceived: p?.volumeReceived },
     cards: cards.list(handle),
@@ -255,7 +255,7 @@ app.post("/api/jobs/:id/decline", (req, res) => {
   }
 });
 
-/** The scripted demo: one AllScale onboarding gives Nova identity, an account, payments and a card. */
+/** The scripted demo: one onboarding gives Nova identity, an account, payments and a card. */
 let demoRunning = false;
 app.post("/api/demo", (_req, res) => {
   if (demoRunning) return res.status(409).json({ error: "demo already running" });
@@ -270,7 +270,7 @@ app.post("/api/demo", (_req, res) => {
     await payAgent.hire(BUYER.handle, "ghost.design", "Diwali sale poster"); // refused: unverified
     await payAgent.hire(BUYER.handle, "studio.video", "Diwali launch video"); // over limit → owner
     await cards.issueOneTime(BUYER.handle, walletOf(BUYER.handle), "Online store order", "4.50"); // card (demo)
-    emit({ kind: "info", title: "One AllScale onboarding: identity, an account, payments and a card." });
+    emit({ kind: "info", title: "One onboarding: identity, an account, payments and a card." });
   })()
     .catch((e) => emit({ kind: "reject", title: "Demo error", detail: (e as Error).message }))
     .finally(() => (demoRunning = false));
@@ -304,7 +304,7 @@ app.get("/mcp", (_req, res) => res.status(405).json({ error: "use POST" }));
 await seedAgents(registry, token);
 
 app.listen(PORT, () => {
-  console.log(`\nAllScale Agent ID · ${MODE === "live" ? `passports on ${registryNet.config.label}, HSP on ${paymentNet.config.label}` : "local chain + HSP emulator"}`);
+  console.log(`\nAll Agent ID · ${MODE === "live" ? `passports on ${registryNet.config.label}, HSP on ${paymentNet.config.label}` : "local chain + HSP emulator"}`);
   console.log(`  Dashboard  ${PUBLIC_URL}`);
   console.log(`  MCP        ${PUBLIC_URL}/mcp`);
   console.log(`  Agents     ${PUBLIC_URL}/agents`);

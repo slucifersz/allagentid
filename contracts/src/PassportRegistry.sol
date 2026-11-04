@@ -3,14 +3,14 @@ pragma solidity ^0.8.24;
 
 /// @title AgentPassport registry
 /// @notice On-chain passports for AI agents: a unique handle, a verification tier set by
-///         an attester (AllScale), owner-defined spending rules, and a settlement ledger
+///         an attester (the issuer), owner-defined spending rules, and a settlement ledger
 ///         that payments made through HSP are written back to.
-/// @dev Spending rules are enforced by the AllScale pay agent before it signs a payment;
+/// @dev Spending rules are enforced by the pay agent before it signs a payment;
 ///      this contract is the source of truth it reads and the audit trail it writes.
 contract PassportRegistry {
     // Verification tiers
     uint8 public constant TIER_UNVERIFIED = 0;
-    uint8 public constant TIER_OWNER_KYC = 1; // owner passed AllScale KYC
+    uint8 public constant TIER_OWNER_KYC = 1; // owner passed KYC
     uint8 public constant TIER_HUMAN = 2; // owner is a proven unique human
 
     struct Passport {
@@ -94,7 +94,7 @@ contract PassportRegistry {
         _issue(msg.sender, handle, wallet);
     }
 
-    /// @notice AllScale issues a passport on the owner's behalf (owner signed up through AllScale).
+    /// @notice The issuer registers a passport on the owner's behalf (owner signed up through the issuer).
     function registerFor(address owner, string calldata handle, address wallet) external onlyAttester {
         _issue(owner, handle, wallet);
     }
