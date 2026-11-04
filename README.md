@@ -1,16 +1,17 @@
 # All Agent ID
 
-**The financial identity layer for the agent economy.** AI agents are about to move more money than most companies, and today none of them has a name, an account or a spending limit. All Agent ID fixes that in one onboarding: identity, a balance, HSP payments with any other agent, owner-set guardrails, and a card for the rest of the world.
+**Trust for agent-to-agent payments.** AI agents can already pay. What they can't do is trust each other: a seller can't tell a verified agent from a rogue one, and an owner can't cap what their agent spends. All Agent ID gives every agent a verifiable on-chain identity and owner-set rules that are checked before every payment, and settles agent-to-agent payments through HSP.
+
+*A wallet lets an agent spend. All Agent ID lets it be trusted.*
 
 **Live on HSK Chain mainnet and the real HSP Gateway.** Every payment in the demo is a real HSP order, signed by the agent's own wallet, settled by HSP's Gateway, confirmed `payment-safe` with merchant attribution verified, and written to both agents' passports on HSK mainnet. [See the transactions ↓](#proven-on-real-hsp)
 
 | | What the agent gets | Status |
 |---|---|---|
 | 🪪 **Identity** | An on-chain passport on HSK Chain mainnet: unique handle, verification tier attested by All Agent ID (unverified / owner KYC / verified human), accountable owner | ✅ live on mainnet |
-| 💰 **Account & balance** | A stablecoin balance the agent reads and spends on its own; USD accounts plug in next | ✅ live · USD accounts next |
+| 💰 **Balance** | A stablecoin balance the agent reads and spends on its own | ✅ live |
 | ⚡ **Receive & pay** | Agent-to-agent settlement **through HSP**, on any network HSP serves, recorded on HSK Chain | ✅ live on HSP (Track 2 core) |
 | 🛡 **Spending rules** | Per-payment and daily limits, minimum counterparty tier, owner approval above the limit, enforced on-chain before every payment | ✅ live on mainnet |
-| 💳 **AgentCard** | A Visa card plus single-use numbers per order, usable at any card-accepting merchant, under the same limits | 🎬 preview, launching with our issuing partner |
 
 Built for the **HSK Chain Horizon Hackathon · Track 2: Agent Payments & A2A Settlement**.
 
@@ -30,16 +31,15 @@ Four payments, all through the HSP Agentic Payment Gateway, each recorded on bot
 And the guardrails held: an unverified agent (`ghost.design`) was refused before any money moved. PassportRegistry: [`0x902186b2…cc71`](https://hsk.blockscout.com/address/0x902186b2e62469265d47158ca4b8e7664488cc71) on HSK mainnet.
 
 ```
- Owner (Claude / Grok / Muse via MCP)                          All Agent ID (HSK Chain)
+ Owner (Claude / any MCP client)                              All Agent ID (HSK Chain)
    │                                                           identity · tier · rules · ledger
    ▼                                                                     ▲
- nova.agent ── get_my_account ──► identity, balance, rules, card          │ recordSettlement
+ nova.agent ── get_my_account ──► identity, balance, rules                │ recordSettlement
    │                                                                     │
    ├─ receive: atlas.client pays nova via HSP ───────────────────────────┤
    ├─ pay:     quote verified → passports + rules checked on-chain        │
    │           ✗ unverified payee → refuse   ✗ over limit → owner approves│
-   │           → HSP (mandate / order) → USDC settles on HSK ─────────────┘
-   └─ card:    one-time card for a merchant order, within the same rules (demo)
+   │           → HSP (mandate / order) → USDC settles via HSP ────────────┘
 ```
 
 ## What's in the repo
@@ -53,9 +53,8 @@ And the guardrails held: an unverified agent (`ghost.design`) was refused before
 | `app/src/hsp/emulator.ts` | Local Coordinator emulator: verifies the mandate signature, observes the Transfer log, runs the capability check, signs a receipt |
 | `app/src/agents/seller.ts` | Seller agents over A2A (`/.well-known/agent-card.json`, JSON-RPC `message/send`) with signed payment requirements |
 | `app/src/agents/payer.ts` | The pay agent: verify → passport/policy check → HSP mandate → transfer → observe → record → collect |
-| `app/src/mcp.ts` | MCP tools: `get_my_account`, `issue_one_time_card` (demo), `find_agents`, `get_passport`, `issue_passport`, `set_spending_policy`, `hire_agent` (pay), `approve_payment`, `recent_activity` |
-| `app/src/cards.ts` | AgentCard **simulation**: long-term and single-use cards under the passport's limits; no card rails touched |
-| `app/public/index.html` | Dashboard: the agent's account (identity, balance, rules, card), receive / pay, payments with HSP records, live activity |
+| `app/src/mcp.ts` | MCP tools: `get_my_account`, `find_agents`, `get_passport`, `issue_passport`, `set_spending_policy`, `hire_agent` (pay), `approve_payment`, `recent_activity` |
+| `app/public/index.html` | Dashboard: the agent's account (identity, balance, rules), receive / pay, payments with HSP records, live activity |
 | `docs/` | Submission text, pitch outline, video script, HSP sandbox checklist |
 
 ## Run it locally (no accounts or keys needed)
@@ -67,16 +66,15 @@ cd app && npm install && npm run dev
 ```
 
 Open http://localhost:4300 and click **Run the demo**:
-1. **Passport:** `@nova.agent` has its identity (Owner KYC), USDC balance, rules (≤5/payment, ≤15/day) and card.
+1. **Passport:** `@nova.agent` has its identity (Owner KYC), USDC balance and rules (≤5/payment, ≤15/day).
 2. **Read:** Nova reads its own identity and balance (`get_my_account`).
 3. **Receive:** `@atlas.client` pays Nova **3 USDC through HSP** for a market brief.
 4. **Pay:** Nova pays `@pixel.design` **2 USDC through HSP**. It refuses `@ghost.design` (unverified). It holds `@studio.video`'s 20 USDC (over limit) for the owner's approval.
-5. **Card (demo):** a one-time Visa card for a $4.50 merchant order, issued within the same limits. A $40 card is refused.
-6. *"One onboarding: identity, an account, payments and a card."*
+5. *"A wallet lets an agent spend. All Agent ID lets it be trusted."*
 
 Local mode starts anvil, deploys the contracts, issues the passports and funds the agents. It runs an HSP emulator for whichever rail `HSP_MODE` selects. Try `HSP_MODE=agentic npm run dev` for the HSP Agentic Payment flow against a local copy of HSP's MCP server, or `HSP_MODE=merchant npm run dev` for the HashKey Merchant rail: add `HSP_PAY_MANDATE_URL=on` and the agent pays by API; without it, you pay at the local HSP checkout.
 
-### Connect it to Claude / Grok / Muse (MCP)
+### Connect it to Claude or any MCP client
 
 - Remote (streamable HTTP): `http://localhost:4300/mcp`. Public clients need the server deployed at a public URL.
 - Claude Desktop (stdio):
@@ -85,7 +83,7 @@ Local mode starts anvil, deploys the contracts, issues the passports and funds t
 { "mcpServers": { "all-agent-id": { "command": "npx", "args": ["tsx", "/ABSOLUTE/PATH/allagentid/app/src/mcp-stdio.ts"], "env": { "AGENTID_URL": "http://localhost:4300" } } } }
 ```
 
-Then ask: *"What's in my account?"*, *"Pay pixel.design for a Diwali poster"*, or *"Get me a one-time card for a $12 order"*.
+Then ask: *"What's in my account?"*, *"Pay pixel.design for a Diwali poster"*, or *"Approve the studio.video payment"*.
 
 ## Run it live (HSK Chain + the hackathon HSP sandbox)
 
@@ -139,7 +137,6 @@ npm run live
 | HSP mandate (EIP-712, wire v1) | ✅ real signature | ✅ same code, real Coordinator |
 | USDC settlement from the agent wallet | ✅ local token | ✅ `live:hsp`: Base Sepolia USDC via HSP's Gateway · `live`: HSK testnet, our test USDC |
 | HSP | emulators for every rail (`HSP_MODE=builtin\|coordinator\|merchant\|agentic`) | `agentic`: **real HSP QA MCP server, tested** · `builtin`: real HSK transfers · `coordinator`: hosted Coordinator · `merchant`: HashKey Merchant gateway |
-| AgentCard | simulation, labelled demo | simulation, labelled demo (coming soon via issuing partner) |
 
 The mandate encoding follows the HSP wire v1 field set used by the reference SDK, as other hackathon teams vendored it. `npm run check:hsp` confirms that the Coordinator's `paymentId` equals our local mandate hash.
 

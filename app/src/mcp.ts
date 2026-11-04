@@ -1,5 +1,5 @@
 // All Agent ID MCP tools. They call the All Agent ID HTTP API, so the same tools run over
-// stdio (Claude Desktop) and streamable HTTP at /mcp (Grok, Muse, remote clients).
+// stdio (Claude Desktop) and streamable HTTP at /mcp (remote MCP clients).
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 

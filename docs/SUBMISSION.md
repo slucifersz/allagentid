@@ -4,7 +4,7 @@
 
 **Track:** Agent Payments & A2A Settlement (HSP)
 
-**One-liner:** The financial identity layer for the agent economy. One onboarding gives any AI agent an on-chain passport on HSK Chain, a balance, real HSP payments with other agents, owner-set guardrails, and a card, live today on HSK mainnet and the HSP Gateway.
+**One-liner:** Trust for agent-to-agent payments: a verifiable on-chain identity on HSK Chain and owner-set rules checked before every payment, settled through the real HSP Gateway. A wallet lets an agent spend; All Agent ID lets it be trusted.
 
 **Links**
 - GitHub: https://github.com/slucifersz/allagentid
@@ -26,22 +26,20 @@
 
 ## Problem
 
-Agents are becoming the fastest-growing class of economic actor, and they are already buying data, compute and services from each other. Yet none of them has a financial identity. Nobody can tell who an agent is or who stands behind it. An agent has nowhere to hold a balance, get paid or pay, and its owner has no way to cap what it spends. Today every capability is a separate integration: a wallet here, a payment API there, a card somewhere else.
+AI agents can already pay, and they are starting to buy data, compute and services from each other. What they can't do is trust each other. A seller can't tell a verified agent from a rogue one, or know who stands behind it. A buyer can't be sure it is paying the right counterparty. And an owner has no way to cap what their agent spends, or to step in before a large payment. Without that trust, agents can move money but can't really do business.
 
 ## What we built
 
-**All Agent ID** is a single onboarding that gives an agent everything it needs to transact. Status of each part:
+**All Agent ID** adds the trust layer to agent-to-agent payments:
 
 | | Capability | Status |
 |---|---|---|
 | 🪪 | **Identity:** an on-chain passport on HSK Chain with a unique handle, a verification tier attested by All Agent ID (unverified / owner KYC / verified human) and its owner | live |
 | 💰 | **Account and balance:** a stablecoin balance the agent can read and spend | live |
-| 💰 | USD account | coming soon |
 | ⚡ | **Receive and pay:** settlement with other agents and merchants **through HSP**. Every payment is recorded on both passports on HSK Chain | live on HSP QA (Track 2 core) |
 | 🛡 | **Spending rules:** owner-set per-payment and daily limits, plus a minimum counterparty tier. Unverified payees are refused, and payments over the limit wait for owner approval | live, on-chain |
-| 💳 | **US card (AgentCard):** a long-term Visa card plus single-use cards per order, for any card-accepting merchant, under the same limits | preview, launching with our issuing partner (cards in this build are simulated) |
 
-The agent uses all of this through MCP (`get_my_account`, `hire_agent`, `approve_payment`, `issue_one_time_card`…) from Claude, Grok or Muse. The owner sees the same account in the dashboard.
+The agent uses all of this through MCP (`get_my_account`, `hire_agent`, `approve_payment`…) from Claude or any MCP client. The owner sees the same account in the dashboard.
 
 ## The HSP part (Track 2)
 
@@ -68,16 +66,14 @@ A payment between agents works like this:
 1. Nova opens its passport and reads its identity and balance.
 2. Atlas, a client agent, **pays Nova 3 USDC through HSP**.
 3. Nova **pays a verified designer 2 USDC through HSP**. It **refuses** an unverified agent, and **holds** a 20 USDC payment over its limit until the owner approves.
-4. Nova gets a **one-time card** for a $4.50 merchant order, within the same limits. This step is a demo.
-
-*One onboarding: identity, an account, payments and a card.*
+*A wallet lets an agent spend. All Agent ID lets it be trusted.*
 
 ## What's next
 
-- USD accounts funding agent balances; one balance spendable on-chain (HSP) and off-chain (card)
-- AgentCard through an issuing partner
+- More HSP settlement networks, HSK mainnet first
+- A developer SDK, so any agent framework can add verified identity and rules in a few lines
 - Smart-account spending modules, so limits are enforced in the wallet itself
-- HSP compliant payments: passport tiers backing `attests:kyc` / `attests:sanctions`
+- Richer rules: per-counterparty and per-category limits, time windows, multi-party approval
 
 ## Team
 
